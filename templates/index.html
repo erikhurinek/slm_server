@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Chatbot Interface</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            background-color: #1e1e2f; /* Darker background for a "vibe-dev" feel */
+            position: relative;
+            color: #ffffff; /* Default text color */
+        }
+        .background-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 5rem;
+            font-weight: bold;
+            background: linear-gradient(90deg, #ff6f61, #ffcc00, #33cc33, #3399ff, #cc33ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            pointer-events: none;
+            user-select: none;
+            white-space: nowrap;
+            text-shadow: 2px 2px 10px rgba(0, 0, 0, 0.5); /* Add shadow for depth */
+        }
+        .chat-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            padding: 20px;
+            background-color: rgba(30, 30, 47, 0.9); /* Semi-transparent overlay */
+            box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.5); /* Shadow for the chat container */
+            border-radius: 10px; /* Rounded corners */
+        }
+        .messages {
+            flex: 1;
+            overflow-y: auto;
+            margin-bottom: 10px;
+            padding: 10px;
+            box-shadow: inset 0px 2px 5px rgba(0, 0, 0, 0.3); /* Inner shadow for messages area */
+            border-radius: 5px;
+        }
+        .message {
+            margin: 5px 0;
+            padding: 10px;
+            border-radius: 5px;
+            max-width: 70%;
+            box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.3); /* Shadow for individual messages */
+        }
+        .user-message {
+            background-color: #007bff;
+            color: white;
+            align-self: flex-end;
+        }
+        .bot-message {
+            background-color: #e0e0e0;
+            color: black;
+            align-self: flex-start;
+        }
+        .input-container {
+            display: flex;
+            gap: 10px;
+            box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.3); /* Shadow for input container */
+            border-radius: 5px;
+        }
+        .input-container input[type="text"] {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-shadow: inset 0px 2px 5px rgba(0, 0, 0, 0.2); /* Inner shadow for input */
+            background-color: #2e2e3f;
+            color: #ffffff;
+        }
+        .input-container input[type="submit"] {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.3); /* Shadow for button */
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+        .input-container input[type="submit"]:hover {
+            background-color: #0056b3;
+            transform: scale(1.05); /* Slight zoom effect on hover */
+        }
+    </style>
+</head>
+<body>
+    <div class="background-text">vibes</div>
+    <div class="chat-container">
+        <div class="messages" id="messages">
+            <!-- Chat messages will appear here -->
+        </div>
+        <form class="input-container">
+            <input type="text" id="userInput" placeholder="Type your message here..." autocomplete="off">
+            <input type="submit" value="Send" onclick="event.preventDefault(); sendMessage();">
+        </form>
+    </div>
+
+    <script>
+        const messagesContainer = document.getElementById('messages');
+
+        function sendMessage() {
+            const userInput = document.getElementById('userInput');
+            const messageText = userInput.value.trim();
+
+            if (messageText) {
+                // Add user message to chat
+                addMessage(messageText, 'user-message');
+
+                // Send the message to the server
+                fetch('/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt: messageText })
+                }).then(response => {
+                    if (response.ok) {
+                        const reader = response.body.getReader();
+                        let botMessage = '';
+                        const botMessageElement = addMessage('', 'bot-message'); // Placeholder for bot message
+
+                        function readStream() {
+                            reader.read().then(({ done, value }) => {
+                                if (done) return;
+                                const chunk = new TextDecoder().decode(value);
+                                botMessage += chunk;
+                                botMessageElement.textContent = botMessage; // Update bot message in real-time
+                                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                                readStream();
+                            });
+                        }
+
+                        readStream();
+                    } else {
+                        addMessage('Error: Unable to connect to the server.', 'bot-message');
+                    }
+                }).catch(() => {
+                    addMessage('Error: Unable to connect to the server.', 'bot-message');
+                });
+
+                userInput.value = '';
+            }
+        }
+
+        function addMessage(text, className) {
+            const message = document.createElement('div');
+            message.className = `message ${className}`;
+            message.textContent = text;
+            messagesContainer.appendChild(message);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            return message; // Return the message element for updates
+        }
+    </script>
+</body>
+</html>

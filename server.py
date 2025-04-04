@@ -1,10 +1,10 @@
-from flask import Flask, Response, request, jsonify
+from flask import Flask, Response, request, jsonify, render_template
 import ollama
 
 app = Flask(__name__)
 
 SYSTEM_PROMPT = "You are a friendly human. Act as human as possible, and provide concise responses."
-MODEL = "Mistral"
+MODEL = "gemma3:4b"
 messages = [{"role": "system", "content": SYSTEM_PROMPT}]
 
 
@@ -23,6 +23,10 @@ def generate_response():
         yield f"Error generating response."
 
 
+@app.route("/")
+def index():
+    return render_template("index.html")
+
 @app.route("/chat", methods=["POST"])
 def chat():
     global messages
@@ -36,7 +40,11 @@ def chat():
     return Response(
         generate_response(),
         mimetype="text/event-stream",
-        headers={"Cache-Control": "no-cache", "Connection": "keep-alive"},
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no"  # Disable buffering for real-time streaming
+        },
     )
 
 

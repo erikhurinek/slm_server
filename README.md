@@ -1,7 +1,7 @@
 # SLM Server
 
 A Small Language Model (SLM) implemented in Python.
-Model: [Mistral 7B](https://huggingface.co/mistralai/Mistral-7B-v0.1) from [Ollama](https://ollama.com/).
+Model: [Gemma 4b](https://ai.google.dev/gemma) from [Ollama](https://ollama.com/).
 Backend: [Flask](https://flask.palletsprojects.com/en/stable/).
 
 ## Requirements
@@ -10,14 +10,14 @@ Backend: [Flask](https://flask.palletsprojects.com/en/stable/).
    - Ollama
    - Requests
  - Ollama
- - Mistral 7B model
+ - Gemma 4b model
  - At least 8GB of RAM
 
 ## Installation and Usage
  1. Install the [Ollama](https://ollama.com/download) client
  2. Install Mistral 7B model using the command:
     ```bash
-    ollama pull mistral
+    ollama pull gemma3:4b
     ```
  3. Install required Python packages, either globally or in an virtual environment, using the command:
     ```bash
