@@ -1,30 +1,39 @@
 import requests
-import sseclient
 
-url_chat = "http://localhost:5000/chat"
+URL_CHAT = "http://localhost:5000/chat"
+
 
 def print_response(prompt):
     try:
-        response = requests.post(url_chat, json={"prompt": prompt}, stream=True)
-        response.raise_for_status()  # Raise an error for HTTP status codes >= 400
-        
+        response = requests.post(URL_CHAT, json={"prompt": prompt}, stream=True)
+        response.raise_for_status()
+
         for chunk in response.iter_content(chunk_size=None):
-            print(repr(chunk.decode('utf-8')))
-        
-        client = sseclient.SSEClient(response)
-        
-        for event in client.events():
-            print(event.data, end="", flush=True)  # Print each chunk as it arrives
-        print()
+            print(chunk.decode("utf-8"), end="", flush=True)
+
     except requests.exceptions.RequestException as e:
         print("response: " + str(response.text))
         print(f"Error: {e}")
 
+    print()
+
+def reset_chat():
+    try:
+        response = requests.post("http://localhost:5000/reset")
+        response.raise_for_status()
+        print(response.json())
+    except requests.exceptions.RequestException as e:
+        print(f"Error resetting chat: {e}")
+
 user_response = ""
 while True:
     prompt = input("You: ").strip()
-    if (prompt.lower() == "exit"):
-        break
     
+    if prompt.lower() == "exit":
+        break
+    elif prompt.lower() == "reset":
+        reset_chat()
+        continue
+
     print("Model: ", end="", flush=True)
     print_response(prompt)
