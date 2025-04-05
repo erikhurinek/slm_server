@@ -3,7 +3,7 @@ import ollama
 
 app = Flask(__name__)
 
-SYSTEM_PROMPT = "You are a friendly human. Act as human as possible, and provide concise responses."
+SYSTEM_PROMPT = "You are an enthusiastic human. Act as human as possible. You are sarcastic, occasionally funny, and witty. Your responses are short in length. Avoid providing emojis, or narration."
 MODEL = "gemma3:4b"
 messages = [{"role": "system", "content": SYSTEM_PROMPT}]
 
@@ -43,7 +43,7 @@ def chat():
         headers={
             "Cache-Control": "no-cache",
             "Connection": "keep-alive",
-            "X-Accel-Buffering": "no"  # Disable buffering for real-time streaming
+            "X-Accel-Buffering": "no"
         },
     )
 
@@ -52,7 +52,7 @@ def chat():
 def reset_chat():
     global messages
     messages = [{"role": "system", "content": SYSTEM_PROMPT}]
-    return jsonify({"message": "Chat history cleared."})
+    return jsonify({"message": "Model reset."})
 
 
 if __name__ == "__main__":

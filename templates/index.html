@@ -1,111 +1,199 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Chatbot Interface</title>
+    <title>Chat Vibe</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
     <style>
-        body {
-            font-family: Arial, sans-serif;
+        * {
+            box-sizing: border-box;
             margin: 0;
             padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(to right, #f5f7fa, #c3cfe2);
+            color: #333;
             display: flex;
-            flex-direction: column;
+            justify-content: center;
+            align-items: center;
             height: 100vh;
-            background-color: #1e1e2f; /* Darker background for a "vibe-dev" feel */
-            position: relative;
-            color: #ffffff; /* Default text color */
+            overflow: hidden;
         }
-        .background-text {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 5rem;
-            font-weight: bold;
-            background: linear-gradient(90deg, #ff6f61, #ffcc00, #33cc33, #3399ff, #cc33ff);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            pointer-events: none;
-            user-select: none;
-            white-space: nowrap;
-            text-shadow: 2px 2px 10px rgba(0, 0, 0, 0.5); /* Add shadow for depth */
-        }
-        .chat-container {
-            flex: 1;
+
+        .chat-wrapper {
+            width: 95%;
+            max-width: 1000px;
+            height: 92vh;
+            background: #ffffff;
+            border-radius: 20px;
             display: flex;
             flex-direction: column;
-            justify-content: flex-end;
-            padding: 20px;
-            background-color: rgba(30, 30, 47, 0.9); /* Semi-transparent overlay */
-            box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.5); /* Shadow for the chat container */
-            border-radius: 10px; /* Rounded corners */
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
         }
+
+        .header {
+            padding: 24px;
+            text-align: center;
+            font-size: 1.75rem;
+            font-weight: 600;
+            background: #f0f4f8;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
         .messages {
             flex: 1;
             overflow-y: auto;
-            margin-bottom: 10px;
-            padding: 10px;
-            box-shadow: inset 0px 2px 5px rgba(0, 0, 0, 0.3); /* Inner shadow for messages area */
-            border-radius: 5px;
+            padding: 30px 40px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            background-color: #f9f9fb;
         }
+
         .message {
-            margin: 5px 0;
-            padding: 10px;
-            border-radius: 5px;
+            padding: 14px 20px;
+            border-radius: 18px;
             max-width: 70%;
-            box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.3); /* Shadow for individual messages */
+            word-wrap: break-word;
+            animation: fadeIn 0.3s ease-in-out;
+            font-size: 1rem;
         }
+
         .user-message {
-            background-color: #007bff;
-            color: white;
+            background: #4f8ef7;
+            color: #fff;
             align-self: flex-end;
         }
+
         .bot-message {
-            background-color: #e0e0e0;
-            color: black;
+            background: #e2e8f0;
+            color: #111;
             align-self: flex-start;
         }
-        .input-container {
+
+        .input-area {
             display: flex;
-            gap: 10px;
-            box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.3); /* Shadow for input container */
-            border-radius: 5px;
+            padding: 20px 24px;
+            gap: 12px;
+            background: #f0f4f8;
+            border-top: 2px solid #e0e0e0;
         }
-        .input-container input[type="text"] {
+
+        .input-area input[type="text"] {
             flex: 1;
-            padding: 10px;
+            padding: 14px 18px;
+            border-radius: 12px;
             border: 1px solid #ccc;
-            border-radius: 5px;
-            box-shadow: inset 0px 2px 5px rgba(0, 0, 0, 0.2); /* Inner shadow for input */
-            background-color: #2e2e3f;
-            color: #ffffff;
+            background: #fff;
+            color: #333;
+            font-size: 1rem;
         }
-        .input-container input[type="submit"] {
-            padding: 10px 20px;
-            background-color: #007bff;
-            color: white;
+
+        .input-area input[type="submit"] {
+            border-radius: 12px 0 0 12px;
+            padding: 0 20px;
+        }
+
+        .button {
+            background: #4f8ef7;
             border: none;
-            border-radius: 5px;
+            color: white;
+            padding: 14px 20px;
+            border-radius: 12px;
             cursor: pointer;
-            box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.3); /* Shadow for button */
-            transition: background-color 0.3s ease, transform 0.2s ease;
+            font-size: 1rem;
+            transition: background 0.2s;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
-        .input-container input[type="submit"]:hover {
-            background-color: #0056b3;
-            transform: scale(1.05); /* Slight zoom effect on hover */
+
+        .button:hover {
+            background: #336ac0;
+        }
+
+        .options-button {
+            border-radius: 0 12px 12px 0;
+            padding: 0 14px;
+            margin: 0;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            bottom: 100%;
+            right: 0;
+            background-color: #f9f9f9;
+            min-width: 160px;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            z-index: 1;
+            border-radius: 8px;
+        }
+
+        .dropdown:hover .dropdown-content {
+            display: block;
+        }
+
+        .dropdown-content a {
+            color: black;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+            font-size: 0.9rem;
+        }
+
+        .dropdown-content a:hover {
+            background-color: #f1f1f1;
+            border-radius: 8px;
+        }
+
+        .submit-container {
+            display: flex;
+            align-items: stretch;
+            height: 48px;
         }
     </style>
 </head>
+
 <body>
-    <div class="background-text">vibes</div>
-    <div class="chat-container">
+    <div class="chat-wrapper">
+        <div class="header">Vibe Chat</div>
         <div class="messages" id="messages">
-            <!-- Chat messages will appear here -->
+            <!-- Chat messages here -->
         </div>
-        <form class="input-container">
-            <input type="text" id="userInput" placeholder="Type your message here..." autocomplete="off">
-            <input type="submit" value="Send" onclick="event.preventDefault(); sendMessage();">
+        <form class="input-area">
+            <input type="text" id="userInput" placeholder="Say something..." autocomplete="off">
+            <div class="submit-container">
+                <input type="submit" value="Send" class="button" onclick="event.preventDefault(); sendMessage();">
+                <div class="dropdown">
+                    <button type="button" class="options-button button">⋮</button>
+                    <div class="dropdown-content">
+                        <a href="#" onclick="resetChat(); return false;">Reset Chat</a>
+                    </div>
+                </div>
+            </div>
         </form>
     </div>
 
@@ -117,10 +205,8 @@
             const messageText = userInput.value.trim();
 
             if (messageText) {
-                // Add user message to chat
                 addMessage(messageText, 'user-message');
 
-                // Send the message to the server
                 fetch('/chat', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -129,14 +215,14 @@
                     if (response.ok) {
                         const reader = response.body.getReader();
                         let botMessage = '';
-                        const botMessageElement = addMessage('', 'bot-message'); // Placeholder for bot message
+                        const botMessageElement = addMessage('', 'bot-message');
 
                         function readStream() {
                             reader.read().then(({ done, value }) => {
                                 if (done) return;
                                 const chunk = new TextDecoder().decode(value);
                                 botMessage += chunk;
-                                botMessageElement.textContent = botMessage; // Update bot message in real-time
+                                botMessageElement.textContent = botMessage;
                                 messagesContainer.scrollTop = messagesContainer.scrollHeight;
                                 readStream();
                             });
@@ -160,8 +246,25 @@
             message.textContent = text;
             messagesContainer.appendChild(message);
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
-            return message; // Return the message element for updates
+            return message;
+        }
+
+        function resetChat() {
+            fetch('/reset', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            }).then(response => {
+                if (response.ok) {
+                    messagesContainer.innerHTML = '';
+                    addMessage('Model has been reset.', 'bot-message');
+                } else {
+                    addMessage('Error: Unable to reset chat.', 'bot-message');
+                }
+            }).catch(() => {
+                addMessage('Error: Unable to reset chat.', 'bot-message');
+            });
         }
     </script>
 </body>
+
 </html>

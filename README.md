@@ -27,7 +27,4 @@ Backend: [Flask](https://flask.palletsprojects.com/en/stable/).
     ```bash
     python server.py
     ```
- 5. Run the client and start chatting, using the command:
-    ```bash
-    python client.py
-    ```
+ 5. Open your web browser and navigate to `http://localhost:5000` to access the SLM server.
