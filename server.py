@@ -57,4 +57,8 @@ def reset_chat():
 
 
 if __name__ == "__main__":
-    app.run(debug=True, port=8080)
+    # For local development:
+    # app.run(debug=True, port=8080)
+    
+    # For public serving (binds to all network interfaces):
+    app.run(host='0.0.0.0', port=8080, debug=False)
