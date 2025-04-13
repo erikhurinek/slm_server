@@ -27,6 +27,7 @@ def generate_response():
 def index():
     return render_template("index.html")
 
+
 @app.route("/chat", methods=["POST"])
 def chat():
     global messages
@@ -43,7 +44,7 @@ def chat():
         headers={
             "Cache-Control": "no-cache",
             "Connection": "keep-alive",
-            "X-Accel-Buffering": "no"
+            "X-Accel-Buffering": "no",
         },
     )
 
@@ -56,4 +57,4 @@ def reset_chat():
 
 
 if __name__ == "__main__":
-    app.run(debug=True, port=5000)
+    app.run(debug=True, port=8080)
