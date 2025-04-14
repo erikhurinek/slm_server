@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chat Vibe</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
     <style>
         * {
             box-sizing: border-box;
@@ -43,6 +44,56 @@
             font-weight: 600;
             background: #f0f4f8;
             border-bottom: 2px solid #e0e0e0;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .status-container {
+            position: absolute;
+            right: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-size: 0.85rem;
+        }
+
+        .user-count {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            color: #555;
+        }
+
+        .busy-indicator {
+            display: none;  /* Hide by default */
+            align-items: center;
+            gap: 5px;
+            color: #555;
+        }
+
+        .busy-indicator.active {
+            display: flex;  /* Show only when active */
+            color: #ff6b6b;
+        }
+
+        .busy-indicator .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: #ccc;
+        }
+
+        .busy-indicator.active .dot {
+            background-color: #ff6b6b;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 0.4; }
+            50% { opacity: 1; }
+            100% { opacity: 0.4; }
         }
 
         .messages {
@@ -129,6 +180,7 @@
                 opacity: 0;
                 transform: translateY(10px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
@@ -147,7 +199,7 @@
             right: 0;
             background-color: #f9f9f9;
             min-width: 160px;
-            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
             z-index: 1;
             border-radius: 8px;
         }
@@ -179,7 +231,18 @@
 
 <body>
     <div class="chat-wrapper">
-        <div class="header">Vibe Chat</div>
+        <div class="header">
+            Vibe Chat
+            <div class="status-container">
+                <div class="user-count">
+                    <span id="user-count">0</span> users online
+                </div>
+                <div id="busy-indicator" class="busy-indicator">
+                    <div class="dot"></div>
+                    <span>AI cooking</span>
+                </div>
+            </div>
+        </div>
         <div class="messages" id="messages">
             <!-- Chat messages here -->
         </div>
@@ -199,71 +262,96 @@
 
     <script>
         const messagesContainer = document.getElementById('messages');
+        const busyIndicator = document.getElementById('busy-indicator');
+        const userCountElement = document.getElementById('user-count');
+
+        // Track the current fetch request so we can abort it if needed
+        let currentRequest = null;
+        let currentMessageId = -1;
+
+        // Initialize Socket.IO connection
+        const socket = io.connect(window.location.origin);
+
+        // Event listener for receiving messages from the server
+        socket.on('new_messages', function (data) {
+            let messages = data.new_messages;
+            messages.sort((a, b) => a.id - b.id);
+            messages.forEach(message => {
+                currentMessageId = Math.max(currentMessageId, message.id);
+                updateMessage(message);
+            });
+        });
+
+        // User count event listener
+        socket.on('user_count', function(data) {
+            userCountElement.textContent = data.count;
+        });
+
+        // AI busy status event listener
+        socket.on('ai_status', function(data) {
+            if (data.busy) {
+                busyIndicator.classList.add('active');
+            } else {
+                busyIndicator.classList.remove('active');
+            }
+        });
 
         function sendMessage() {
             const userInput = document.getElementById('userInput');
-            const messageText = userInput.value.trim();
+            const message = userInput.value.trim();
 
-            if (messageText) {
-                addMessage(messageText, 'user-message');
+            if (message) {
+                currentMessageId++;
+                updateMessage({ content: message, id: currentMessageId, role: 'user' });
 
-                fetch('/chat', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ prompt: messageText })
-                }).then(response => {
-                    if (response.ok) {
-                        const reader = response.body.getReader();
-                        let botMessage = '';
-                        const botMessageElement = addMessage('', 'bot-message');
-
-                        function readStream() {
-                            reader.read().then(({ done, value }) => {
-                                if (done) return;
-                                const chunk = new TextDecoder().decode(value);
-                                botMessage += chunk;
-                                botMessageElement.textContent = botMessage;
-                                messagesContainer.scrollTop = messagesContainer.scrollHeight;
-                                readStream();
-                            });
-                        }
-
-                        readStream();
-                    } else {
-                        addMessage('Error: Unable to connect to the server.', 'bot-message');
-                    }
-                }).catch(() => {
-                    addMessage('Error: Unable to connect to the server.', 'bot-message');
-                });
+                socket.emit('submit_message', { content: message });
 
                 userInput.value = '';
             }
         }
 
-        function addMessage(text, className) {
-            const message = document.createElement('div');
-            message.className = `message ${className}`;
-            message.textContent = text;
-            messagesContainer.appendChild(message);
+        // Add a message to the chat display
+        // message: { id, content, user }
+        function updateMessage(message) {
+            console.log('Updating message:', message);
+            const role = message.role === 'user' ? 'user' : 'bot';
+            let messageElement = messagesContainer.querySelector(`[data-id='${message.id}']`);
+
+            if (!messageElement) {
+                messageElement = document.createElement('div');
+                messageElement.classList.add('message');
+                messageElement.classList.add(role + '-message');
+                messageElement.setAttribute('data-id', message.id);
+                messagesContainer.appendChild(messageElement);
+            } else {
+                // For existing elements, ensure we have the right classes
+                // (in case role changed, though unlikely)
+                messageElement.classList.add('message');
+                messageElement.classList.add(role + '-message');
+            }
+
+            messageElement.innerText = message.content;
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
-            return message;
         }
 
+        // Reset the chat
         function resetChat() {
-            fetch('/reset', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' }
-            }).then(response => {
-                if (response.ok) {
-                    messagesContainer.innerHTML = '';
-                    addMessage('Model has been reset.', 'bot-message');
-                } else {
-                    addMessage('Error: Unable to reset chat.', 'bot-message');
-                }
-            }).catch(() => {
-                addMessage('Error: Unable to reset chat.', 'bot-message');
-            });
+            // Clear the message container
+            messagesContainer.innerHTML = '';
+            currentMessageId = -1;
+
+            // Notify the server to reset the chat session
+            socket.emit('reset');
+            socket.emit('pull_messages');
         }
+
+        // Event listener for Enter key
+        document.getElementById('userInput').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
     </script>
 </body>
 
