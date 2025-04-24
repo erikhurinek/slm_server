@@ -27,4 +27,4 @@ Backend: [Flask](https://flask.palletsprojects.com/en/stable/).
     ```bash
     python server.py
     ```
- 5. Open your web browser and navigate to `http://localhost:8080` to access the SLM server.
+ 5. Open your web browser and navigate to `http://localhost:8080/slm-chat` to access the SLM server.

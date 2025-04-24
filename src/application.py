@@ -5,12 +5,17 @@ from .ai_chat_generator import AiChatGenerator
 from flask import Flask, Response, request, jsonify, render_template
 from flask_socketio import SocketIO, emit
 import eventlet
+import logging
 
 
 class Application:
-    def __init__(self):
+    def __init__(self, logger=None):
+        # Set up logger - use provided one or create a new one
+        self.logger = logger or logging.getLogger(__name__)
+        
         self.app = Flask(__name__)
         self.socketio = SocketIO(self.app)
+        self.logger.info("Initializing application")
 
         # Create an application context for initialization
         with self.app.app_context():
@@ -24,6 +29,7 @@ class Application:
             self.ai_enabled = True  # Default: AI is enabled
 
             self.make_routes()
+            self.logger.info(f"Application initialized with model: {settings.MODEL}")
 
     def slm_token_callback(self, new_tokens, full_response):
         """
@@ -41,19 +47,24 @@ class Application:
         self.messages[self.ai_chat_target_index].content = full_response
         self.update_clients([self.messages[self.ai_chat_target_index].id])
         self.set_ai_busy(False)
+        self.logger.debug(f"AI response completed: {full_response[:50]}...")
 
     def request_slm_background_response(self):
         """
         Request a background response for the current messages from the AI model.
         """
+        self.logger.info("Requesting AI response")
         if self.ai_chat_generator.request_background_chat(self.messages):
             self.add_message("assistant", "...")
             self.ai_chat_target_index = len(self.messages) - 1
             self.set_ai_busy(True)
+        else:
+            self.logger.warning("Failed to request AI response - model may be busy")
 
     def add_message(self, role, content):
         self.messages.append(Message(role, content, self.messageId))
         self.messageId += 1
+        self.logger.debug(f"Added {role} message: {content[:50]}...")
 
     def update_clients(self, messageIds=None, clientIds=None):
         """
@@ -72,34 +83,45 @@ class Application:
                         new_messages.append(message.to_dict())
 
                 self.socketio.emit("new_messages", {"new_messages": new_messages}, room=clientId)
+        
+        if messageIds:
+            self.logger.debug(f"Updated clients with message IDs: {messageIds}")
 
     def broadcast_user_count(self):
         """Broadcast the current user count to all clients"""
         self.socketio.emit("user_count", {"count": self.user_count})
+        self.logger.debug(f"User count updated: {self.user_count}")
 
     def set_ai_busy(self, busy):
         """Set AI busy status and broadcast to all clients"""
         self.ai_busy = busy
         self.socketio.emit("ai_status", {"busy": self.ai_busy})
+        if busy:
+            self.logger.debug("AI status set to busy")
+        else:
+            self.logger.debug("AI status set to idle")
 
     def toggle_ai(self, enabled):
         """Toggle AI responses and broadcast to all clients"""
         self.ai_enabled = enabled
         self.socketio.emit("ai_toggle_status", {"enabled": self.ai_enabled})
+        self.logger.info(f"AI responses {'enabled' if enabled else 'disabled'}")
 
     def reset_clients(self):
         """Reset all clients by sending them the current messages"""
         for clientId in self.clients:
             self.socketio.emit("reset", room=clientId)
+        self.logger.info("Chat reset for all clients")
     
     def make_routes(self):
-        @self.app.route("/")
+        @self.app.route("/slm-chat/")
         def index():
             return render_template("index.html")
 
         @self.socketio.on("connect")
         def handle_connect(auth=None):  # Accept the auth parameter that Flask-SocketIO passes
-            print(f"Client connected: {request.sid}")
+            # get request IP address
+            self.logger.info(f"Client connected: {request.sid} {request.remote_addr}")
             self.clients[request.sid] = request.namespace
             self.user_count += 1
             self.broadcast_user_count()
@@ -111,7 +133,7 @@ class Application:
 
         @self.socketio.on("disconnect")
         def handle_disconnect():
-            print(f"Client disconnected: {request.sid}")
+            self.logger.info(f"Client disconnected: {request.sid}")
             if request.sid in self.clients:
                 del self.clients[request.sid]
                 self.user_count -= 1
@@ -120,28 +142,30 @@ class Application:
         @self.socketio.on("submit_message")
         def handle_message(data):
             """Handles message submission from the client."""
-            print(f"Message from {request.sid}: {data}")
+            self.logger.info(f"Message from {request.sid}: {data}")
             content = data.get("content")
             if not content:
+                self.logger.warning(f"Received empty message from {request.sid}")
                 return
             self.add_message("user", content)
             self.update_clients([self.messageId - 1])
             # Only request AI response if AI is enabled
             if self.ai_enabled:
                 self.request_slm_background_response()
-            print("messages:", self.messages)
+            else:
+                self.logger.debug("AI response not requested (AI disabled)")
             
         @self.socketio.on("toggle_ai")
         def handle_toggle_ai(data):
             """Handles toggling AI on/off."""
-            print(f"Toggle AI request from {request.sid}: {data}")
+            self.logger.info(f"Toggle AI request from {request.sid}: {data}")
             enabled = data.get("enabled", True)
             self.toggle_ai(enabled)
 
         @self.socketio.on("reset")
         def handle_reset():
             """Handles reset chat request from the client."""
-            print(f"Reset request from {request.sid}")
+            self.logger.info(f"Reset request from {request.sid}")
             self.messages = []
             self.messageId = 0
             self.add_message("system", settings.SYSTEM_PROMPT)
@@ -153,7 +177,7 @@ class Application:
         @self.socketio.on("pull_messages")
         def handle_pull_messages(data={}):
             """Handles message pull request from the client."""
-            print(f"Pull messages request from {request.sid}")
+            self.logger.debug(f"Pull messages request from {request.sid}")
             id = data.get("id")
             if not id:
                 self.update_clients(clientIds=[request.sid])
@@ -162,8 +186,10 @@ class Application:
 
     def run(self):
         if settings.DEBUG:
+            self.logger.info(f"Starting server in DEBUG mode on port {settings.PORT}")
             # Use socketio.run with eventlet worker instead of app.run
             self.socketio.run(self.app, host="127.0.0.1", port=settings.PORT, debug=True)
         else:
+            self.logger.info(f"Starting server in PRODUCTION mode on port {settings.PORT}")
             # For production, also use socketio.run with eventlet
             self.socketio.run(self.app, host="0.0.0.0", port=settings.PORT, debug=False)
