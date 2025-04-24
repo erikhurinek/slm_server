@@ -54,12 +54,11 @@
 
         // Track the current fetch request so we can abort it if needed
         let currentRequest = null;
-        let aiEnabled = true; // Default: AI is enabled
+        let aiEnabled = true;
 
-        // Initialize Socket.IO connection
         const socket = io.connect(window.location.origin);
 
-        // Event listener for receiving messages from the server
+        // Receiving messages
         socket.on('update_messages', function (data) {
             data.messages.forEach(message => {
                 updateMessage(message);
@@ -80,7 +79,7 @@
             }
         });
 
-        // AI toggle status event listener
+        // AI toggle status
         socket.on('ai_toggle_status', function(data) {
             aiEnabled = data.enabled;
             updateAiToggleText();
@@ -91,6 +90,13 @@
         socket.on('reset', function() {
             resetChat();
         });
+
+        function parseMarkdown(content) {
+            return content
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') // Bold
+                .replace(/\*(.*?)\*/g, '<em>$1</em>') // Italics
+                .replace(/__(.*?)__/g, '<u>$1</u>') // Underline
+        }
 
         function updateAiToggleText() {
             aiToggleElement.textContent = aiEnabled ? "Disable AI" : "Enable AI";
@@ -123,7 +129,7 @@
             }
         }
 
-        // Add a message to the chat display
+        // Add or update a message to the chat display
         // message: { id, content, user, append }
         function updateMessage(message) {
             const role = message.role === 'user' ? 'user' : 'bot';
@@ -150,6 +156,7 @@
                 messageElement.innerHTML = message.content;
             }
 
+            messageElement.innerHTML = parseMarkdown(messageElement.innerHTML);
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
         }
 
