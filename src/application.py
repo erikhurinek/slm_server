@@ -16,6 +16,7 @@ class Application:
         self.logger.info("Initializing application")
 
         with self.app.app_context():
+            self.messages: list[Message] = []
             self.reset_messages()
             self.clients = {}
             self.ai_chat_generator = AiChatGenerator(self.slm_token_callback, self.slm_finish_callback)
@@ -77,12 +78,9 @@ class Application:
         - data_to_append: Data to append to the clients.
         - clientIds: List of client IDs to send the messages to. If None, all clients are updated.
         """
-        data = [{
-            "id": messageId,
-            "content": content_to_append,
-            "role": self.messages[messageId].role,
-            "append": True
-        }]
+        data = [self.messages[messageId].to_dict(settings.SHOW_USER_NAME)]
+        data[0]["content"] = content_to_append
+        data[0]["append"] = True
         clientIds = clientIds or self.clients.keys()
 
         if messageId >= len(self.messages) or not self.messages[messageId]:
@@ -115,7 +113,7 @@ class Application:
                 updated_messages = []
                 for message in self.messages:
                     if message.id in messageIds and not message.hidden:
-                        updated_messages.append(message.to_dict())
+                        updated_messages.append(message.to_dict(settings.SHOW_USER_NAME))
 
                 if updated_messages:
                     self.socketio.emit("update_messages", {"messages": updated_messages}, room=clientId)

@@ -38,7 +38,8 @@
                     <button type="button" class="options-button button">⋮</button>
                     <div class="dropdown-content">
                         <a class="dropdown-element" onclick="socket.emit('reset'); return false;">Reset Chat</a>
-                        <a class="dropdown-element" id="ai-toggle" onclick="toggleAI(); return false;">Disable Responses</a>
+                        <a class="dropdown-element" id="ai-toggle" onclick="toggleAI(); return false;">Disable
+                            Responses</a>
                     </div>
                 </div>
             </div>
@@ -66,12 +67,12 @@
         });
 
         // User count event listener
-        socket.on('user_count', function(data) {
-            userCountElement.textContent = `${data.count} user${data.count == 1 ? "": "s"} online`;
+        socket.on('user_count', function (data) {
+            userCountElement.textContent = `${data.count} user${data.count == 1 ? "" : "s"} online`;
         });
 
         // AI busy status event listener
-        socket.on('ai_status', function(data) {
+        socket.on('ai_status', function (data) {
             if (data.busy) {
                 busyIndicator.classList.add('active');
             } else {
@@ -80,14 +81,14 @@
         });
 
         // AI toggle status
-        socket.on('ai_toggle_status', function(data) {
+        socket.on('ai_toggle_status', function (data) {
             aiEnabled = data.enabled;
             updateAiToggleText();
             updateAiStatusIndicator();
         });
 
         // AI reset
-        socket.on('reset', function() {
+        socket.on('reset', function () {
             resetChat();
         });
 
@@ -99,7 +100,7 @@
         }
 
         function updateAiToggleText() {
-            aiToggleElement.textContent = aiEnabled ? "Disable AI" : "Enable AI";
+            aiToggleElement.textContent = aiEnabled ? "Disable Response" : "Enable Response";
         }
 
         function updateAiStatusIndicator() {
@@ -135,18 +136,33 @@
         function updateMessage(message) {
             const role = message.role === 'assistant' ? 'bot' : 'user';
             const append = message.append || false;
-            let messageElement = messagesContainer.querySelector(`[data-id='${message.id}']`);
+            let messageContainer = messagesContainer.querySelector(`[data-id='${message.id}']`);
+            let messageElement;
 
-            if (!messageElement) {
+            if (!messageContainer) {
+                // Create a message container that will hold both username and message content
+                messageContainer = document.createElement('div');
+                messageContainer.classList.add('message-container');
+                messageContainer.setAttribute('data-id', message.id);
+
+                // Create username element
+                if (role !== 'bot' && message.user_name) {
+                    const usernameElement = document.createElement('div');
+                    usernameElement.classList.add('username');
+                    usernameElement.classList.add(role + '-username');
+                    usernameElement.textContent = message.user_name || (role === 'bot' ? 'AI Assistant' : 'You');
+                    messageContainer.appendChild(usernameElement);
+                }
+
+                // Create message content element
                 messageElement = document.createElement('div');
                 messageElement.classList.add('message');
                 messageElement.classList.add(role + '-message');
-                messageElement.setAttribute('data-id', message.id);
-                messagesContainer.appendChild(messageElement);
-            } else if (message.role) {
-                // Update role only if specified
-                messageElement.classList.add('message');
-                messageElement.classList.add(role + '-message');
+                messageContainer.appendChild(messageElement);
+
+                messagesContainer.appendChild(messageContainer);
+            } else {
+                messageElement = messageContainer.querySelector('.message');
             }
 
             if (append) {

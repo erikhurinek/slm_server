@@ -108,13 +108,35 @@ body {
     background-color: #f9f9fb;
 }
 
+.message-container {
+    display: flex;
+    flex-direction: column;
+    max-width: 70%;
+    animation: fadeIn 0.3s ease-in-out;
+}
+
 .message {
     padding: 14px 20px;
     border-radius: 18px;
-    max-width: 70%;
     word-wrap: break-word;
-    animation: fadeIn 0.3s ease-in-out;
     font-size: 1rem;
+    width: fit-content;
+}
+
+.username {
+    font-size: 0.8rem;
+    margin-bottom: 4px;
+    padding: 0 6px;
+    color: #555;
+}
+
+.user-username {
+    align-self: flex-end;
+    text-align: right;
+}
+
+.bot-username {
+    align-self: flex-start;
 }
 
 .user-message {
@@ -126,6 +148,15 @@ body {
 .bot-message {
     background: #e2e8f0;
     color: #111;
+    align-self: flex-start;
+}
+
+/* Update the container alignment for user and bot messages */
+.message-container:has(.user-message) {
+    align-self: flex-end;
+}
+
+.message-container:has(.bot-message) {
     align-self: flex-start;
 }
 
@@ -257,10 +288,19 @@ body {
         padding: 20px 25px;
     }
 
-    .message {
+    .message-container {
         max-width: 85%;
+    }
+
+    .message {
+        max-width: 100%;
         font-size: 0.95rem;
         padding: 12px 16px;
+    }
+
+    .username {
+        font-size: 0.7rem;
+        margin-bottom: 3px;
     }
 
     .input-area {
@@ -302,10 +342,19 @@ body {
         gap: 12px;
     }
 
-    .message {
+    .message-container {
         max-width: 90%;
+    }
+
+    .message {
+        max-width: 100%;
         padding: 10px 14px;
         font-size: 0.9rem;
+    }
+
+    .username {
+        font-size: 0.65rem;
+        margin-bottom: 2px;
     }
 
     .input-area {

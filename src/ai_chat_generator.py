@@ -21,7 +21,6 @@ class AiChatGenerator:
         self.finish_callback = finish_callback
         self.lock = threading.Lock()
         self.generation_thread = None
-        self.nameGenerator = NameGenerator()
 
     def _convert_message_to_ollama(self, message: Message):
         """
@@ -38,7 +37,7 @@ class AiChatGenerator:
         elif message.user_id == "assistant":
             new_message = message.content
         else:
-            new_message = f"{self.nameGenerator.get_name(message.user_id)}: {message.content}"
+            new_message = f"{message.user_name}: {message.content}"
 
         return {"role": message.role, "content": new_message}
 
