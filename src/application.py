@@ -81,6 +81,11 @@ class Application:
         self.ai_busy = busy
         self.socketio.emit("ai_status", {"busy": self.ai_busy})
 
+    def reset_clients(self):
+        """Reset all clients by sending them the current messages"""
+        for clientId in self.clients:
+            self.socketio.emit("reset", room=clientId)
+    
     def make_routes(self):
         @self.app.route("/")
         def index():
@@ -125,6 +130,7 @@ class Application:
             self.add_message("system", settings.SYSTEM_PROMPT)
             self.ai_chat_generator.cancel_generation()
             self.set_ai_busy(False)
+            self.reset_clients()
             self.update_clients()
 
         @self.socketio.on("pull_messages")

@@ -253,7 +253,7 @@
                 <div class="dropdown">
                     <button type="button" class="options-button button">⋮</button>
                     <div class="dropdown-content">
-                        <a href="#" onclick="resetChat(); return false;">Reset Chat</a>
+                        <a href="#" onclick="socket.emit('reset'); return false;">Reset Chat</a>
                     </div>
                 </div>
             </div>
@@ -294,6 +294,11 @@
             } else {
                 busyIndicator.classList.remove('active');
             }
+        });
+
+        // AI reset
+        socket.on('reset', function() {
+            resetChat();
         });
 
         function sendMessage() {
@@ -339,10 +344,6 @@
             // Clear the message container
             messagesContainer.innerHTML = '';
             currentMessageId = -1;
-
-            // Notify the server to reset the chat session
-            socket.emit('reset');
-            socket.emit('pull_messages');
         }
 
         // Event listener for Enter key
