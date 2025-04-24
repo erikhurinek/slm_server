@@ -54,18 +54,14 @@
 
         // Track the current fetch request so we can abort it if needed
         let currentRequest = null;
-        let currentMessageId = -1;
         let aiEnabled = true; // Default: AI is enabled
 
         // Initialize Socket.IO connection
         const socket = io.connect(window.location.origin);
 
         // Event listener for receiving messages from the server
-        socket.on('new_messages', function (data) {
-            let messages = data.new_messages;
-            messages.sort((a, b) => a.id - b.id);
-            messages.forEach(message => {
-                currentMessageId = Math.max(currentMessageId, message.id);
+        socket.on('update_messages', function (data) {
+            data.messages.forEach(message => {
                 updateMessage(message);
             });
         });
@@ -122,20 +118,16 @@
             const message = userInput.value.trim();
 
             if (message) {
-                // currentMessageId++;
-                // updateMessage({ content: message, id: currentMessageId, role: 'user' });
-
                 socket.emit('submit_message', { content: message });
-
                 userInput.value = '';
             }
         }
 
         // Add a message to the chat display
-        // message: { id, content, user }
+        // message: { id, content, user, append }
         function updateMessage(message) {
-            console.log('Updating message:', message);
             const role = message.role === 'user' ? 'user' : 'bot';
+            const append = message.append || false;
             let messageElement = messagesContainer.querySelector(`[data-id='${message.id}']`);
 
             if (!messageElement) {
@@ -144,14 +136,20 @@
                 messageElement.classList.add(role + '-message');
                 messageElement.setAttribute('data-id', message.id);
                 messagesContainer.appendChild(messageElement);
-            } else {
-                // For existing elements, ensure we have the right classes
-                // (in case role changed, though unlikely)
+            } else if (message.role && !append) {
+                // Update role only if specified and not appending
                 messageElement.classList.add('message');
                 messageElement.classList.add(role + '-message');
             }
 
-            messageElement.innerText = message.content;
+            if (append) {
+                console.log('Appending message:', message);
+                messageElement.innerHTML += message.content;
+            } else {
+                console.log('Updating message:', message);
+                messageElement.innerHTML = message.content;
+            }
+
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
         }
 

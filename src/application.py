@@ -39,14 +39,14 @@ class Application:
         This function is called each time a new token is generated.
         """
         self.messages[self.ai_chat_target_index].content = full_response
-        self.update_clients([self.messages[self.ai_chat_target_index].id])
+        self.update_clients_append(self.messages[self.ai_chat_target_index].id, new_tokens)
 
     def slm_finish_callback(self, full_response):
         """
         Callback function for when the AI model finishes generating a response.
         This function is called when the generation is complete.
         """
-        # Update message only if an index exists. The references message may have been deleted.
+        # Update message only if an index exists. The referenced message may have been deleted.
         if self.ai_chat_target_index is not None:
             self.messages[self.ai_chat_target_index].content = full_response
             self.update_clients([self.messages[self.ai_chat_target_index].id])
@@ -70,26 +70,53 @@ class Application:
         self.messageId += 1
         self.logger.debug(f"Added {role} message: {content[:50]}...")
 
+    def update_clients_append(self, messageId, content_to_append, clientIds=None):
+        """
+        Append data to the clients.
+        ### Parameters:
+        - data_to_append: Data to append to the clients.
+        - clientIds: List of client IDs to send the messages to. If None, all clients are updated.
+        """
+        data = [{
+            "id": messageId,
+            "content": content_to_append,
+            "append": True
+        }]
+        clientIds = clientIds or self.clients.keys()
+
+        if messageId >= len(self.messages) or not self.messages[messageId]:
+            self.logger.warning(f"Message ID {messageId} not found, not appending")
+            return
+        elif self.messages[messageId].hidden:
+            self.logger.warning(f"Message ID {messageId} is hidden, not appending")
+            return
+        
+        for clientId in clientIds:
+            if clientId in self.clients:
+                self.socketio.emit("update_messages", {"messages": data}, room=clientId)
+            else:
+                self.logger.warning(f"Client ID {clientId} not found in clients list")
+        
+        self.logger.debug(f"Appended data \"{content_to_append}\" to clients {clientIds}")
+
     def update_clients(self, messageIds=None, clientIds=None):
         """
         Update clients with new messages.
         ### Parameters:
         - messageIds: List of message IDs to send to the clients. If None, the last message ID is used.
         - clientIds: List of client IDs to send the messages to. If None, all clients are updated.
+        - append: If True, indicates that the message content should be appended to the existing messages.
         """
         clientIds = clientIds or self.clients.keys()
         messageIds = messageIds or [self.messageId - 1]
         for clientId in clientIds:
             if clientId in self.clients:
-                new_messages = []
+                updated_messages = []
                 for message in self.messages:
                     if message.id in messageIds and not message.hidden:
-                        new_messages.append(message.to_dict())
-                    elif message.hidden:
-                        print(f"Message ignored (hidden): {message.content}")
+                        updated_messages.append(message.to_dict())
 
-                print(f"Updating clients with new messages: {new_messages}")
-                self.socketio.emit("new_messages", {"new_messages": new_messages}, room=clientId)
+                self.socketio.emit("update_messages", {"messages": updated_messages}, room=clientId)
         
         if messageIds:
             self.logger.debug(f"Updated clients with message IDs: {messageIds}")
