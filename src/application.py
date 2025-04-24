@@ -66,9 +66,9 @@ class Application:
             self.logger.warning("Failed to request AI response - model may be busy")
 
     def add_message(self, role, content, user_id=None, hidden=False):
-        self.messages.append(Message(role, content, self.messageId, user_id, hidden=False))
+        self.messages.append(Message(role, content, self.messageId, user_id, hidden))
         self.messageId += 1
-        self.logger.debug(f"Added {role} message: {content[:50]}...")
+        self.logger.debug(f"Added {role} message: {content}, ID: {self.messageId - 1}, User ID: {user_id}, Hidden: {hidden}")
 
     def update_clients_append(self, messageId, content_to_append, clientIds=None):
         """
@@ -117,7 +117,8 @@ class Application:
                     if message.id in messageIds and not message.hidden:
                         updated_messages.append(message.to_dict())
 
-                self.socketio.emit("update_messages", {"messages": updated_messages}, room=clientId)
+                if updated_messages:
+                    self.socketio.emit("update_messages", {"messages": updated_messages}, room=clientId)
         
         if messageIds:
             self.logger.debug(f"Updated clients with message IDs: {messageIds}")
@@ -175,11 +176,15 @@ class Application:
         def handle_message(data):
             """Handles message submission from the client."""
             self.logger.info(f"Message from {request.sid}: {data}")
-            content = data.get("content")
-            if not content:
-                self.logger.warning(f"Received empty message from {request.sid}")
-                return
-            self.add_message("user", content, request.sid)
+            content = data.get("content", "")
+            
+            hidden = False
+            if content == "":
+                self.logger.info(f"Received empty message from {request.sid}. Assuming forced response.")
+                content = settings.FORCE_PROMPT
+                hidden = True
+            
+            self.add_message("user", content, request.sid, hidden)
             self.update_clients([self.messageId - 1])
             if self.ai_enabled:
                 self.request_slm_background_response()
@@ -203,12 +208,6 @@ class Application:
             self.set_ai_busy(False)
             self.reset_clients()
             self.update_clients()
-
-        @self.socketio.on("force_response")
-        def handle_force_response():
-            """Handles force response request from the client."""
-            self.logger.info(f"Force response request from {request.sid}")
-            self.request_slm_background_response()
             
         @self.socketio.on("pull_messages")
         def handle_pull_messages(data={}):

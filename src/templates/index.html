@@ -33,13 +33,12 @@
         <form class="input-area">
             <input type="text" id="userInput" placeholder="Say something..." autocomplete="off">
             <div class="submit-container">
-                <input type="submit" value="Send" class="button" onclick="event.preventDefault(); sendMessage();">
+                <input type="submit" value="Send" class="button" onclick="event.preventDefault(); sendMessage(true);">
                 <div class="dropdown">
                     <button type="button" class="options-button button">⋮</button>
                     <div class="dropdown-content">
                         <a class="dropdown-element" onclick="socket.emit('reset'); return false;">Reset Chat</a>
                         <a class="dropdown-element" id="ai-toggle" onclick="toggleAI(); return false;">Disable Responses</a>
-                        <a class="dropdown-element" onclick="forceResponse(); return false;">Force Response</a>
                     </div>
                 </div>
             </div>
@@ -120,14 +119,15 @@
             updateAiStatusIndicator();
         }
 
-        function sendMessage() {
-            const userInput = document.getElementById('userInput');
-            const message = userInput.value.trim();
-
-            if (message) {
-                socket.emit('submit_message', { content: message });
-                userInput.value = '';
+        function sendMessage(force) {
+            console.log('Sending message:', force);
+            const message = document.getElementById('userInput').value.trim();
+            if (message.length === 0 && !force) {
+                return;
             }
+
+            socket.emit('submit_message', { content: message });
+            userInput.value = '';
         }
 
         // Add or update a message to the chat display
@@ -166,10 +166,6 @@
             // Clear the message container
             messagesContainer.innerHTML = '';
             currentMessageId = -1;
-        }
-
-        function forceResponse() {
-            socket.emit('force_response');
         }
 
         // Event listener for Enter key
