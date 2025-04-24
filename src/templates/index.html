@@ -132,7 +132,7 @@
         // Add or update a message to the chat display
         // message: { id, content, user, append }
         function updateMessage(message) {
-            const role = message.role === 'user' ? 'user' : 'bot';
+            const role = message.role === 'assistant' ? 'bot' : 'user';
             const append = message.append || false;
             let messageElement = messagesContainer.querySelector(`[data-id='${message.id}']`);
 
@@ -142,8 +142,8 @@
                 messageElement.classList.add(role + '-message');
                 messageElement.setAttribute('data-id', message.id);
                 messagesContainer.appendChild(messageElement);
-            } else if (message.role && !append) {
-                // Update role only if specified and not appending
+            } else if (message.role) {
+                // Update role only if specified
                 messageElement.classList.add('message');
                 messageElement.classList.add(role + '-message');
             }

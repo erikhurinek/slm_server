@@ -28,7 +28,7 @@ class Application:
             self.logger.info(f"Application initialized with model: {settings.MODEL}")
 
     def reset_messages(self):
-        self.messages = [Message("system", settings.SYSTEM_PROMPT, 0, settings.HIDE_SYSTEM_PROMPT)]
+        self.messages = [Message("system", settings.SYSTEM_PROMPT, 0, None, settings.HIDE_SYSTEM_PROMPT)]
         self.messageId = 1
         if (settings.GREETING and settings.GREETING != ""):
             self.add_message("assistant", settings.GREETING)
@@ -65,8 +65,8 @@ class Application:
         else:
             self.logger.warning("Failed to request AI response - model may be busy")
 
-    def add_message(self, role, content):
-        self.messages.append(Message(role, content, self.messageId))
+    def add_message(self, role, content, user_id=None, hidden=False):
+        self.messages.append(Message(role, content, self.messageId, user_id, hidden=False))
         self.messageId += 1
         self.logger.debug(f"Added {role} message: {content[:50]}...")
 
@@ -80,6 +80,7 @@ class Application:
         data = [{
             "id": messageId,
             "content": content_to_append,
+            "role": self.messages[messageId].role,
             "append": True
         }]
         clientIds = clientIds or self.clients.keys()
@@ -178,7 +179,7 @@ class Application:
             if not content:
                 self.logger.warning(f"Received empty message from {request.sid}")
                 return
-            self.add_message("user", content)
+            self.add_message("user", content, request.sid)
             self.update_clients([self.messageId - 1])
             if self.ai_enabled:
                 self.request_slm_background_response()

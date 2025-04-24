@@ -1,7 +1,10 @@
 from . import settings
-import threading
+from .message import Message
+from .name_generator import NameGenerator
 
+import threading
 import ollama
+
 
 class AiChatGenerator:
     def __init__(self, token_callback: callable = None, finish_callback: callable = None):
@@ -18,18 +21,38 @@ class AiChatGenerator:
         self.finish_callback = finish_callback
         self.lock = threading.Lock()
         self.generation_thread = None
+        self.nameGenerator = NameGenerator()
+
+    def _convert_message_to_ollama(self, message: Message):
+        """
+        Convert a Message object to the format expected by the Ollama API.
+        ### Parameters:
+        - message: The Message object to convert.
+        ### Returns:
+        A dictionary representation of the message in the format expected by the Ollama API.
+        """
+
+        new_message = ""
+        if message.user_id == "system":
+            new_message = "System: " + message.content
+        elif message.user_id == "assistant":
+            new_message = message.content
+        else:
+            new_message = f"{self.nameGenerator.get_name(message.user_id)}: {message.content}"
+
+        return {"role": message.role, "content": new_message}
 
     def _generate_response(self):
         with self.lock:
             if self.is_generating:
                 return
             self.is_generating = True
-        
+
         full_response = ""
         try:
             for chunk in ollama.chat(self.MODEL, messages=self.messages, stream=True):
-                if chunk and 'message' in chunk and 'content' in chunk['message']:
-                    content = chunk['message']['content']
+                if chunk and "message" in chunk and "content" in chunk["message"]:
+                    content = chunk["message"]["content"]
                     full_response += content
                     if self.token_callback:
                         self.token_callback(content, full_response)
@@ -55,13 +78,13 @@ class AiChatGenerator:
         with self.lock:
             if self.is_generating:
                 return False
-            
-            self.messages = [msg.to_dict() for msg in messages]
+
+            self.messages = [self._convert_message_to_ollama(msg) for msg in messages]
             self.generation_thread = threading.Thread(target=self._generate_response)
             self.generation_thread.daemon = True
             self.generation_thread.start()
             return True
-            
+
     def cancel_generation(self):
         """
         Attempts to cancel the current generation if possible.

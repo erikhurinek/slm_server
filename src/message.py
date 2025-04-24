@@ -4,13 +4,21 @@ class Message:
     ### Members:
     role: The role of the message sender: "system", "user", or "assistant".  
     content: The content of the message.  
-    message_id: The unique identifier for the message. 
-    hidden: Whether the message should be hidden from clients. 
+    message_id: The unique identifier for the message.  
+    user_id: The ID of the user who sent the message. If role is "system", this will be ignored and set to "system". Similarly, if role is "assistant", this will be ignored and set to "assistant".  
+    hidden: Whether the message should be hidden from clients.  
     """
-    def __init__(self, role, content, message_id, hidden = False):
+
+    def __init__(self, role, content, message_id, user_id, hidden=False):
         self.role = role
         self.content = content
         self.id = message_id
+        if role == "system":
+            self.user_id = "system"
+        elif role == "assistant":
+            self.user_id = "assistant"
+        else:
+            self.user_id = user_id
         self.hidden = hidden
 
     def to_dict(self):
@@ -23,8 +31,9 @@ class Message:
             "role": self.role,
             "content": self.content,
             "id": self.id,
-            "hidden": self.hidden
+            "hidden": self.hidden,
+            "user_id": self.user_id,
         }
-    
+
     def __repr__(self):
         return f"Message(role={self.role}, content={self.content}, id={self.id}, hidden={self.hidden}"
