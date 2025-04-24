@@ -70,6 +70,4 @@ class AiChatGenerator:
         with self.lock:
             was_generating = self.is_generating
             self.is_generating = False
-            # Note: This doesn't immediately stop ollama.chat, but will prevent further tokens
-            # from being processed once the current call returns
             return was_generating

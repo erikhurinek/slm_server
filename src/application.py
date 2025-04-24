@@ -2,22 +2,19 @@ from . import settings
 from .message import Message
 from .ai_chat_generator import AiChatGenerator
 
-from flask import Flask, Response, request, jsonify, render_template
-from flask_socketio import SocketIO, emit
-import eventlet
+from flask import Flask, request, render_template
+from flask_socketio import SocketIO
 import logging
 
 
 class Application:
     def __init__(self, logger=None):
-        # Set up logger - use provided one or create a new one
         self.logger = logger or logging.getLogger(__name__)
         
         self.app = Flask(__name__)
         self.socketio = SocketIO(self.app)
         self.logger.info("Initializing application")
 
-        # Create an application context for initialization
         with self.app.app_context():
             self.messages = [Message("system", settings.SYSTEM_PROMPT, 0)]
             self.messageId = 1
@@ -26,7 +23,7 @@ class Application:
             self.ai_chat_target_index = None
             self.ai_busy = False
             self.user_count = 0
-            self.ai_enabled = True  # Default: AI is enabled
+            self.ai_enabled = True
 
             self.make_routes()
             self.logger.info(f"Application initialized with model: {settings.MODEL}")
@@ -44,10 +41,12 @@ class Application:
         Callback function for when the AI model finishes generating a response.
         This function is called when the generation is complete.
         """
-        self.messages[self.ai_chat_target_index].content = full_response
-        self.update_clients([self.messages[self.ai_chat_target_index].id])
+        # Update message only if an index exists. The references message may have been deleted.
+        if self.ai_chat_target_index is not None:
+            self.messages[self.ai_chat_target_index].content = full_response
+            self.update_clients([self.messages[self.ai_chat_target_index].id])
         self.set_ai_busy(False)
-        self.logger.debug(f"AI response completed: {full_response[:50]}...")
+        self.logger.info(f"AI response completed: {full_response}")
 
     def request_slm_background_response(self):
         """
@@ -119,16 +118,13 @@ class Application:
             return render_template("index.html")
 
         @self.socketio.on("connect")
-        def handle_connect(auth=None):  # Accept the auth parameter that Flask-SocketIO passes
-            # get request IP address
+        def handle_connect(auth=None):
             self.logger.info(f"Client connected: {request.sid} {request.remote_addr}")
             self.clients[request.sid] = request.namespace
             self.user_count += 1
             self.broadcast_user_count()
             self.update_clients(range(self.messageId))
-            # Send current AI status to the new client
             self.socketio.emit("ai_status", {"busy": self.ai_busy}, room=request.sid)
-            # Send AI toggle state to the new client
             self.socketio.emit("ai_toggle_status", {"enabled": self.ai_enabled}, room=request.sid)
 
         @self.socketio.on("disconnect")
@@ -149,7 +145,6 @@ class Application:
                 return
             self.add_message("user", content)
             self.update_clients([self.messageId - 1])
-            # Only request AI response if AI is enabled
             if self.ai_enabled:
                 self.request_slm_background_response()
             else:
@@ -169,6 +164,7 @@ class Application:
             self.messages = []
             self.messageId = 0
             self.add_message("system", settings.SYSTEM_PROMPT)
+            self.ai_chat_target_index = None
             self.ai_chat_generator.cancel_generation()
             self.set_ai_busy(False)
             self.reset_clients()
@@ -187,9 +183,7 @@ class Application:
     def run(self):
         if settings.DEBUG:
             self.logger.info(f"Starting server in DEBUG mode on port {settings.PORT}")
-            # Use socketio.run with eventlet worker instead of app.run
             self.socketio.run(self.app, host="127.0.0.1", port=settings.PORT, debug=True)
         else:
             self.logger.info(f"Starting server in PRODUCTION mode on port {settings.PORT}")
-            # For production, also use socketio.run with eventlet
             self.socketio.run(self.app, host="0.0.0.0", port=settings.PORT, debug=False)
