@@ -122,8 +122,8 @@
             const message = userInput.value.trim();
 
             if (message) {
-                currentMessageId++;
-                updateMessage({ content: message, id: currentMessageId, role: 'user' });
+                // currentMessageId++;
+                // updateMessage({ content: message, id: currentMessageId, role: 'user' });
 
                 socket.emit('submit_message', { content: message });
 

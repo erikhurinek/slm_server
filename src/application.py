@@ -16,8 +16,7 @@ class Application:
         self.logger.info("Initializing application")
 
         with self.app.app_context():
-            self.messages = [Message("system", settings.SYSTEM_PROMPT, 0)]
-            self.messageId = 1
+            self.reset_messages()
             self.clients = {}
             self.ai_chat_generator = AiChatGenerator(self.slm_token_callback, self.slm_finish_callback)
             self.ai_chat_target_index = None
@@ -28,6 +27,12 @@ class Application:
             self.make_routes()
             self.logger.info(f"Application initialized with model: {settings.MODEL}")
 
+    def reset_messages(self):
+        self.messages = [Message("system", settings.SYSTEM_PROMPT, 0, settings.HIDE_SYSTEM_PROMPT)]
+        self.messageId = 1
+        if (settings.GREETING and settings.GREETING != ""):
+            self.add_message("assistant", settings.GREETING)
+    
     def slm_token_callback(self, new_tokens, full_response):
         """
         Callback function for receiving tokens from the AI model.
@@ -78,9 +83,12 @@ class Application:
             if clientId in self.clients:
                 new_messages = []
                 for message in self.messages:
-                    if message.id in messageIds:
+                    if message.id in messageIds and not message.hidden:
                         new_messages.append(message.to_dict())
+                    elif message.hidden:
+                        print(f"Message ignored (hidden): {message.content}")
 
+                print(f"Updating clients with new messages: {new_messages}")
                 self.socketio.emit("new_messages", {"new_messages": new_messages}, room=clientId)
         
         if messageIds:
@@ -161,9 +169,7 @@ class Application:
         def handle_reset():
             """Handles reset chat request from the client."""
             self.logger.info(f"Reset request from {request.sid}")
-            self.messages = []
-            self.messageId = 0
-            self.add_message("system", settings.SYSTEM_PROMPT)
+            self.reset_messages()
             self.ai_chat_target_index = None
             self.ai_chat_generator.cancel_generation()
             self.set_ai_busy(False)
