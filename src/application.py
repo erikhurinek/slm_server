@@ -204,6 +204,12 @@ class Application:
             self.reset_clients()
             self.update_clients()
 
+        @self.socketio.on("force_response")
+        def handle_force_response():
+            """Handles force response request from the client."""
+            self.logger.info(f"Force response request from {request.sid}")
+            self.request_slm_background_response()
+            
         @self.socketio.on("pull_messages")
         def handle_pull_messages(data={}):
             """Handles message pull request from the client."""

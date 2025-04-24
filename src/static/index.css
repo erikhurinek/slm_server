@@ -223,6 +223,10 @@ body {
     border-radius: 8px;
 }
 
+.dropdown-element {
+    cursor: pointer;
+}
+
 .submit-container {
     display: flex;
     align-items: stretch;

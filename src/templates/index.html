@@ -37,8 +37,9 @@
                 <div class="dropdown">
                     <button type="button" class="options-button button">⋮</button>
                     <div class="dropdown-content">
-                        <a onclick="socket.emit('reset'); return false;">Reset Chat</a>
-                        <a id="ai-toggle" onclick="toggleAI(); return false;">Disable Responses</a>
+                        <a class="dropdown-element" onclick="socket.emit('reset'); return false;">Reset Chat</a>
+                        <a class="dropdown-element" id="ai-toggle" onclick="toggleAI(); return false;">Disable Responses</a>
+                        <a class="dropdown-element" onclick="forceResponse(); return false;">Force Response</a>
                     </div>
                 </div>
             </div>
@@ -165,6 +166,10 @@
             // Clear the message container
             messagesContainer.innerHTML = '';
             currentMessageId = -1;
+        }
+
+        function forceResponse() {
+            socket.emit('force_response');
         }
 
         // Event listener for Enter key
