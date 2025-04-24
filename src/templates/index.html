@@ -96,6 +96,18 @@
             100% { opacity: 0.4; }
         }
 
+        .ai-status-indicator {
+            display: none;
+            align-items: center;
+            gap: 5px;
+            color: #ff6b6b;
+            font-weight: 600;
+        }
+
+        .ai-status-indicator.disabled {
+            display: flex;
+        }
+
         .messages {
             flex: 1;
             overflow-y: auto;
@@ -241,6 +253,9 @@
                     <div class="dot"></div>
                     <span>AI cooking</span>
                 </div>
+                <div id="ai-status-indicator" class="ai-status-indicator disabled">
+                    <span>Responses Disabled</span>
+                </div>
             </div>
         </div>
         <div class="messages" id="messages">
@@ -254,6 +269,7 @@
                     <button type="button" class="options-button button">⋮</button>
                     <div class="dropdown-content">
                         <a href="#" onclick="socket.emit('reset'); return false;">Reset Chat</a>
+                        <a href="#" id="ai-toggle" onclick="toggleAI(); return false;">Disable AI</a>
                     </div>
                 </div>
             </div>
@@ -264,10 +280,13 @@
         const messagesContainer = document.getElementById('messages');
         const busyIndicator = document.getElementById('busy-indicator');
         const userCountElement = document.getElementById('user-count');
+        const aiToggleElement = document.getElementById('ai-toggle');
+        const aiStatusIndicator = document.getElementById('ai-status-indicator');
 
         // Track the current fetch request so we can abort it if needed
         let currentRequest = null;
         let currentMessageId = -1;
+        let aiEnabled = true; // Default: AI is enabled
 
         // Initialize Socket.IO connection
         const socket = io.connect(window.location.origin);
@@ -296,10 +315,38 @@
             }
         });
 
+        // AI toggle status event listener
+        socket.on('ai_toggle_status', function(data) {
+            aiEnabled = data.enabled;
+            updateAiToggleText();
+            updateAiStatusIndicator();
+        });
+
         // AI reset
         socket.on('reset', function() {
             resetChat();
         });
+
+        function updateAiToggleText() {
+            aiToggleElement.textContent = aiEnabled ? "Disable AI" : "Enable AI";
+        }
+
+        function updateAiStatusIndicator() {
+            if (aiEnabled) {
+                aiStatusIndicator.classList.remove('disabled');
+                aiStatusIndicator.style.display = 'none';
+            } else {
+                aiStatusIndicator.classList.add('disabled');
+                aiStatusIndicator.style.display = 'flex';
+            }
+        }
+
+        function toggleAI() {
+            aiEnabled = !aiEnabled;
+            socket.emit('toggle_ai', { enabled: aiEnabled });
+            updateAiToggleText();
+            updateAiStatusIndicator();
+        }
 
         function sendMessage() {
             const userInput = document.getElementById('userInput');
@@ -353,6 +400,10 @@
                 sendMessage();
             }
         });
+
+        // Initialize the toggle button text
+        updateAiToggleText();
+        updateAiStatusIndicator();
     </script>
 </body>
 

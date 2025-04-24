@@ -21,6 +21,7 @@ class Application:
             self.ai_chat_target_index = None
             self.ai_busy = False
             self.user_count = 0
+            self.ai_enabled = True  # Default: AI is enabled
 
             self.make_routes()
 
@@ -81,6 +82,11 @@ class Application:
         self.ai_busy = busy
         self.socketio.emit("ai_status", {"busy": self.ai_busy})
 
+    def toggle_ai(self, enabled):
+        """Toggle AI responses and broadcast to all clients"""
+        self.ai_enabled = enabled
+        self.socketio.emit("ai_toggle_status", {"enabled": self.ai_enabled})
+
     def reset_clients(self):
         """Reset all clients by sending them the current messages"""
         for clientId in self.clients:
@@ -100,6 +106,8 @@ class Application:
             self.update_clients(range(self.messageId))
             # Send current AI status to the new client
             self.socketio.emit("ai_status", {"busy": self.ai_busy}, room=request.sid)
+            # Send AI toggle state to the new client
+            self.socketio.emit("ai_toggle_status", {"enabled": self.ai_enabled}, room=request.sid)
 
         @self.socketio.on("disconnect")
         def handle_disconnect():
@@ -118,8 +126,17 @@ class Application:
                 return
             self.add_message("user", content)
             self.update_clients([self.messageId - 1])
-            self.request_slm_background_response()
+            # Only request AI response if AI is enabled
+            if self.ai_enabled:
+                self.request_slm_background_response()
             print("messages:", self.messages)
+            
+        @self.socketio.on("toggle_ai")
+        def handle_toggle_ai(data):
+            """Handles toggling AI on/off."""
+            print(f"Toggle AI request from {request.sid}: {data}")
+            enabled = data.get("enabled", True)
+            self.toggle_ai(enabled)
 
         @self.socketio.on("reset")
         def handle_reset():
