@@ -38,8 +38,9 @@
                     <button type="button" class="options-button button">⋮</button>
                     <div class="dropdown-content">
                         <a class="dropdown-element" onclick="socket.emit('reset'); return false;">Reset Chat</a>
-                        <a class="dropdown-element" id="ai-toggle" onclick="toggleAI(); return false;">Disable
-                            Responses</a>
+                        <a class="dropdown-element" id="ai-toggle" onclick="toggleAI(); return false;">
+                            Disable Responses
+                        </a>
                     </div>
                 </div>
             </div>
@@ -53,25 +54,16 @@
         const aiToggleElement = document.getElementById('ai-toggle');
         const aiStatusIndicator = document.getElementById('ai-status-indicator');
 
-        // Track the current fetch request so we can abort it if needed
         let currentRequest = null;
         let aiEnabled = true;
 
         const socket = io.connect(window.location.origin);
-
-        // Receiving messages
         socket.on('update_messages', function (data) {
-            data.messages.forEach(message => {
-                updateMessage(message);
-            });
+            data.messages.forEach(updateMessage);
         });
-
-        // User count event listener
         socket.on('user_count', function (data) {
-            userCountElement.textContent = `${data.count} user${data.count == 1 ? "" : "s"} online`;
+            userCountElement.textContent = `${data.count} user${data.count == 1 ? "" : "s"} online`; // Handle plural
         });
-
-        // AI busy status event listener
         socket.on('ai_status', function (data) {
             if (data.busy) {
                 busyIndicator.classList.add('active');
@@ -79,24 +71,18 @@
                 busyIndicator.classList.remove('active');
             }
         });
-
-        // AI toggle status
         socket.on('ai_toggle_status', function (data) {
             aiEnabled = data.enabled;
             updateAiToggleText();
             updateAiStatusIndicator();
         });
-
-        // AI reset
-        socket.on('reset', function () {
-            resetChat();
-        });
+        socket.on('reset', resetChat);
 
         function parseMarkdown(content) {
             return content
                 .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') // Bold
-                .replace(/\*(.*?)\*/g, '<em>$1</em>') // Italics
-                .replace(/__(.*?)__/g, '<u>$1</u>') // Underline
+                .replace(/\*(.*?)\*/g, '<em>$1</em>')             // Italics
+                .replace(/__(.*?)__/g, '<u>$1</u>')               // Underline
         }
 
         function updateAiToggleText() {
@@ -132,9 +118,9 @@
         }
 
         // Add or update a message to the chat display
-        // message: { id, content, user, append }
+        // message: [{ id, content, user, append }]
         function updateMessage(message) {
-            const role = message.role === 'assistant' ? 'bot' : 'user';
+            const role = message.role === 'assistant' ? 'assistant' : 'user';
             const append = message.append || false;
             let messageContainer = messagesContainer.querySelector(`[data-id='${message.id}']`);
             let messageElement;
@@ -146,11 +132,11 @@
                 messageContainer.setAttribute('data-id', message.id);
 
                 // Create username element
-                if (role !== 'bot' && message.user_name) {
+                if (role !== 'assistant' && message.user_name) {
                     const usernameElement = document.createElement('div');
                     usernameElement.classList.add('username');
                     usernameElement.classList.add(role + '-username');
-                    usernameElement.textContent = message.user_name || (role === 'bot' ? 'AI Assistant' : 'You');
+                    usernameElement.textContent = message.user_name || (role === 'assistant' ? 'AI Assistant' : 'You');
                     messageContainer.appendChild(usernameElement);
                 }
 

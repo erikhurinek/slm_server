@@ -1,36 +1,34 @@
-from . import settings
-from .message import Message
-from .name_generator import NameGenerator
-
 import threading
 import ollama
+
+from . import settings
+from .message import Message
+from .slm_chat_logger import Logger
 
 
 class AiChatGenerator:
     def __init__(self, token_callback: callable = None, finish_callback: callable = None):
         """
         Initialize the AiChatGenerator with a token callback function.
-        ### Parameters:
-        - token_callback: A function that will be called each time a new token is generated. (new_tokens, full_generation) => None
-        - finish_callback: A function that will be called when the generation is finished. (full_generation) => None
+
+        Parameters
+        ----------
+        token_callback : callable, optional
+            A function that will be called each time a new token is generated.
+            Function signature: (new_tokens, full_generation) -> None
+        finish_callback : callable, optional
+            A function that will be called when the generation is finished.
+            Function signature: (full_generation) -> None
         """
-        self.SYSTEM_PROMPT = settings.SYSTEM_PROMPT
-        self.MODEL = settings.MODEL
-        self.is_generating = False
-        self.token_callback = token_callback
         self.finish_callback = finish_callback
-        self.lock = threading.Lock()
         self.generation_thread = None
+        self.is_generating = False
+        self.lock = threading.Lock()
+        self.MODEL = settings.MODEL
+        self.SYSTEM_PROMPT = settings.SYSTEM_PROMPT
+        self.token_callback = token_callback
 
-    def _convert_message_to_ollama(self, message: Message):
-        """
-        Convert a Message object to the format expected by the Ollama API.
-        ### Parameters:
-        - message: The Message object to convert.
-        ### Returns:
-        A dictionary representation of the message in the format expected by the Ollama API.
-        """
-
+    def _convert_message_to_ollama(self, message: Message) -> None:
         new_message = ""
         if message.user_id == "system":
             new_message = "System: " + message.content
@@ -41,7 +39,7 @@ class AiChatGenerator:
 
         return {"role": message.role, "content": new_message}
 
-    def _generate_response(self):
+    def _generate_response(self) -> None:
         with self.lock:
             if self.is_generating:
                 return
@@ -57,8 +55,8 @@ class AiChatGenerator:
                         self.token_callback(content, full_response)
         except Exception as e:
             if self.token_callback:
-                self.token_callback(f"Error generating response: {str(e)}", f"Error generating response: {str(e)}")
-                print(f"Error generating response: {str(e)}")
+                self.token_callback(f" Error generating response.")
+                Logger.error(f"Error generating response: {str(e)}")
                 if settings.DEBUG:
                     raise e
         finally:
@@ -68,11 +66,14 @@ class AiChatGenerator:
                 if self.finish_callback:
                     self.finish_callback(full_response)
 
-    def request_background_chat(self, messages):
+    def request_background_chat(self, messages: list[Message]) -> bool:
         """
         Request a chat background response from the model.
-        ### Parameters:
-        - messages: A list of messages to send to the model.
+
+        Parameters
+        ----------
+        messages : list[Message]
+            A list of messages to send to the model.
         """
         with self.lock:
             if self.is_generating:
@@ -84,10 +85,14 @@ class AiChatGenerator:
             self.generation_thread.start()
             return True
 
-    def cancel_generation(self):
+    def cancel_generation(self) -> bool:
         """
         Attempts to cancel the current generation if possible.
-        Returns True if generation was in progress and will be stopped, False otherwise.
+
+        Returns
+        -------
+        bool
+            True if the generation was successfully canceled, False otherwise.
         """
         with self.lock:
             was_generating = self.is_generating

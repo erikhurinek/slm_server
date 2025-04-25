@@ -57,14 +57,14 @@ body {
 }
 
 .busy-indicator {
-    display: none;  /* Hide by default */
+    display: none;
     align-items: center;
     gap: 5px;
     color: #555;
 }
 
 .busy-indicator.active {
-    display: flex;  /* Show only when active */
+    display: flex;
     color: #ff6b6b;
 }
 
@@ -135,7 +135,7 @@ body {
     text-align: right;
 }
 
-.bot-username {
+.assistant-username {
     align-self: flex-start;
 }
 
@@ -145,18 +145,17 @@ body {
     align-self: flex-end;
 }
 
-.bot-message {
+.assistant-message {
     background: #e2e8f0;
     color: #111;
     align-self: flex-start;
 }
 
-/* Update the container alignment for user and bot messages */
 .message-container:has(.user-message) {
     align-self: flex-end;
 }
 
-.message-container:has(.bot-message) {
+.message-container:has(.assistant-message) {
     align-self: flex-start;
 }
 
@@ -264,7 +263,6 @@ body {
     height: 48px;
 }
 
-/* Media Queries for Responsive Design */
 @media screen and (max-width: 768px) {
     .chat-wrapper {
         width: 100%;
