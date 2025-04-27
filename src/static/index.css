@@ -314,11 +314,15 @@ body {
     .button {
         padding: 12px 16px;
         font-size: 0.95rem;
-        height: 44px;
+        height: 40px;
     }
 }
 
 @media screen and (max-width: 480px) {
+    body {
+        overflow-y: auto; /* Allow scrolling on small screens */
+    }
+
     .header {
         padding: 14px;
         font-size: 1.3rem;
@@ -356,23 +360,28 @@ body {
     }
 
     .input-area {
-        padding: 12px 12px 0 12px;
-        gap: 6px;
-    }
-
-    .options-button {
-        padding: 0 10px;
+        padding: 12px;
+        position: sticky;
+        bottom: 0;
+        background: #f0f4f8;
+        z-index: 10;
+        /* iOS safe area support */
+        padding-bottom: env(safe-area-inset-bottom);
+        margin-bottom: env(safe-area-inset-bottom);
     }
 
     .input-area input[type="text"] {
-        padding: 10px 12px;
+        font-size: 0.9rem;
         height: 40px;
     }
 
     .button {
-        padding: 10px 12px;
         font-size: 0.9rem;
         height: 40px;
+    }
+
+    .dropdown { 
+        height: 100%;
     }
     
     .dropdown-content {
