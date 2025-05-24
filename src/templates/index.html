@@ -176,12 +176,13 @@
             if (e.key === 'Enter' && !(e.shiftKey || e.ctrlKey || e.metaKey)) {
                 e.preventDefault();
                 sendMessage();
+                this.style.height = 'auto'; 
+                this.style.height = `${this.scrollHeight + 2}px`; 
             }
         });
         userInput.addEventListener('input', function () {
             this.style.height = 'auto'; 
             this.style.height = `${this.scrollHeight + 2}px`; 
-            console.log('Resizing textarea:', this.scrollHeight);
         });
 
         // Initialize the toggle button text
