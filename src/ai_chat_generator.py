@@ -1,13 +1,13 @@
 import threading
 import ollama
+from typing import Callable
 
 from . import settings
 from .message import Message
 from .slm_chat_logger import Logger
 
-
 class AiChatGenerator:
-    def __init__(self, token_callback: callable = None, finish_callback: callable = None):
+    def __init__(self, token_callback: Callable[[str, str], None] | None = None, finish_callback: Callable[[str], None] | None = None):
         """
         Initialize the AiChatGenerator with a token callback function.
 
@@ -28,7 +28,7 @@ class AiChatGenerator:
         self.SYSTEM_PROMPT = settings.SYSTEM_PROMPT
         self.token_callback = token_callback
 
-    def _convert_message_to_ollama(self, message: Message) -> None:
+    def _convert_message_to_ollama(self, message: Message) -> dict:
         new_message = ""
         if message.user_id == "system":
             new_message = "System: " + message.content
@@ -55,7 +55,7 @@ class AiChatGenerator:
                         self.token_callback(content, full_response)
         except Exception as e:
             if self.token_callback:
-                self.token_callback(f" Error generating response.")
+                self.token_callback(f" Error generating response.", f" Error generating response.")
                 Logger.error(f"Error generating response: {str(e)}")
                 if settings.DEBUG:
                     raise e

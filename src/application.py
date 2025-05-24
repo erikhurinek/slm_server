@@ -1,4 +1,4 @@
-from flask import Flask, request, render_template
+from flask import Flask, render_template, request # type: ignore
 from flask_socketio import SocketIO
 
 from . import settings
@@ -6,6 +6,18 @@ from .ai_chat_generator import AiChatGenerator
 from .message import Message
 from .slm_chat_logger import Logger
 
+from typing import TYPE_CHECKING
+
+# Handle Flask request object type checking
+if TYPE_CHECKING:
+    from flask import Request as _Request
+
+    class Request(_Request):
+        sid: str
+        namespace: str
+        remote_addr: str
+
+    request: Request
 
 class Application:
     def __init__(self):
@@ -56,6 +68,9 @@ class Application:
         full_response : str
             The full response generated so far.
         """
+        if self.ai_chat_target_index is None:
+            Logger.warning("AI chat target index is None, cannot update message")
+            return
         self.messages[self.ai_chat_target_index].content = full_response
         self.update_clients_append(self.messages[self.ai_chat_target_index].id, new_content)
 
@@ -115,7 +130,7 @@ class Application:
 
         for clientId in clientIds:
             if clientId in self.clients:
-                self.socketio.emit("update_messages", {"messages": data}, room=clientId)
+                self.socketio.emit("update_messages", {"messages": data}, to=clientId)
             else:
                 Logger.warning(f"Client ID {clientId} not found in clients list")
 
@@ -144,7 +159,7 @@ class Application:
                         updated_messages.append(message.to_dict(settings.SHOW_USER_NAME))
 
                 if updated_messages:
-                    self.socketio.emit("update_messages", {"messages": updated_messages}, room=clientId)
+                    self.socketio.emit("update_messages", {"messages": updated_messages}, to=clientId)
 
         if messageIds:
             Logger.debug(f"Updated clients with message IDs: {messageIds}")
@@ -172,7 +187,7 @@ class Application:
     def reset_clients(self):
         """Reset all clients by sending them the current messages"""
         for clientId in self.clients:
-            self.socketio.emit("reset", room=clientId)
+            self.socketio.emit("reset", to=clientId)
         Logger.info("Chat reset for all clients")
 
     def make_routes(self):
@@ -188,8 +203,8 @@ class Application:
             self.user_count += 1
             self.broadcast_user_count()
             self.update_clients(range(self.messageId))
-            self.socketio.emit("ai_status", {"busy": self.ai_busy}, room=request.sid)
-            self.socketio.emit("ai_toggle_status", {"enabled": self.ai_enabled}, room=request.sid)
+            self.socketio.emit("ai_status", {"busy": self.ai_busy}, to=request.sid)
+            self.socketio.emit("ai_toggle_status", {"enabled": self.ai_enabled}, to=request.sid)
 
         @self.socketio.on("disconnect")
         def handle_disconnect():

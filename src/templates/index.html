@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Vibe Chat</title>
+    <title>Subject Chat</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
     <link rel="stylesheet" href="/static/index.css">
@@ -13,7 +13,7 @@
 <body>
     <div class="chat-wrapper">
         <div class="header">
-            Vibe Chat
+            Subject Chat
             <div class="status-container">
                 <div class="user-count">
                     <span id="user-count">0 users online</span>
@@ -31,7 +31,7 @@
             <!-- Chat messages here -->
         </div>
         <form class="input-area">
-            <input type="text" id="userInput" placeholder="Say something..." autocomplete="off">
+            <textarea id="userInput" placeholder="Say something..." autocomplete="off" rows="1" class="multiline-input"></textarea>
             <div class="submit-container">
                 <input type="submit" value="Send" class="button" onclick="event.preventDefault(); sendMessage(true);">
                 <div class="dropdown">
@@ -86,7 +86,7 @@
         }
 
         function updateAiToggleText() {
-            aiToggleElement.textContent = aiEnabled ? "Disable Response" : "Enable Response";
+            aiToggleElement.textContent = aiEnabled ? "Disable Responses" : "Enable Responses";
         }
 
         function updateAiStatusIndicator() {
@@ -170,12 +170,18 @@
             currentMessageId = -1;
         }
 
-        // Event listener for Enter key
-        document.getElementById('userInput').addEventListener('keypress', function (e) {
-            if (e.key === 'Enter') {
+        // Event listeners for Enter key and auto-resizing textarea
+        const userInput = document.getElementById('userInput');
+        userInput.addEventListener('keypress', function (e) {
+            if (e.key === 'Enter' && !(e.shiftKey || e.ctrlKey || e.metaKey)) {
                 e.preventDefault();
                 sendMessage();
             }
+        });
+        userInput.addEventListener('input', function () {
+            this.style.height = 'auto'; 
+            this.style.height = `${this.scrollHeight + 2}px`; 
+            console.log('Resizing textarea:', this.scrollHeight);
         });
 
         // Initialize the toggle button text
