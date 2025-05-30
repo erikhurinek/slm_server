@@ -2,7 +2,7 @@ import threading
 import ollama
 from typing import Callable
 
-from . import settings
+from .settings import Settings
 from .message import Message
 from .slm_chat_logger import Logger
 
@@ -24,8 +24,8 @@ class AiChatGenerator:
         self.generation_thread = None
         self.is_generating = False
         self.lock = threading.Lock()
-        self.MODEL = settings.MODEL
-        self.SYSTEM_PROMPT = settings.SYSTEM_PROMPT
+        self.MODEL = Settings.get("model")
+        self.system_prompt = Settings.get("system_prompt")
         self.token_callback = token_callback
 
     def _convert_message_to_ollama(self, message: Message) -> dict:
@@ -57,7 +57,7 @@ class AiChatGenerator:
             if self.token_callback:
                 self.token_callback(f" Error generating response.", f" Error generating response.")
                 Logger.error(f"Error generating response: {str(e)}")
-                if settings.DEBUG:
+                if Settings.get("debug"):
                     raise e
         finally:
             with self.lock:

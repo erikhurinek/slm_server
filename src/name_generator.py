@@ -1,6 +1,8 @@
 import hashlib
 import os
 
+from .settings import Settings
+
 ADJECTIVES_PATH = "english/adjectives.txt"
 NOUNS_PATH = "english/nouns.txt"
 
@@ -24,7 +26,7 @@ class NameGenerator:
 
     def _load_words(self, path):
         words = []
-        path = os.path.join(os.path.dirname(__file__), path)
+        path = os.path.join(Settings.get_root(), path)
         with open(path, "r") as file:
             words = file.read().splitlines()
         return words

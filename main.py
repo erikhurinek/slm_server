@@ -1,9 +1,12 @@
 import eventlet
+import os
 
 eventlet.monkey_patch()
 
 import sys
 
+from src.settings import Settings
+Settings.set_root(os.path.dirname(os.path.abspath(__file__)))
 
 from src.slm_chat_logger import Logger
 from src.application import Application

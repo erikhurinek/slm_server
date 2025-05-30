@@ -3,7 +3,7 @@ import os
 import sys
 from datetime import datetime
 
-from . import settings
+from .settings import Settings
 
 
 class Logger:
@@ -21,14 +21,14 @@ class Logger:
 
     def _setup_internal_logger(self):
         """Set up the logger with file and console handlers."""
-        log_dir = os.path.join(os.path.dirname(__file__), "logs")
+        log_dir = os.path.join(Settings.get_root(), "logs")
         os.makedirs(log_dir, exist_ok=True)
 
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         log_file = os.path.join(log_dir, f"slm_server_{timestamp}.log")
 
         self.logger = logging.getLogger()
-        self.logger.setLevel(logging.DEBUG if settings.DEBUG else logging.INFO)
+        self.logger.setLevel(logging.DEBUG if Settings.get("debug") else logging.INFO)
 
         file_handler = logging.FileHandler(log_file)
         file_handler.setLevel(logging.INFO)
@@ -36,7 +36,7 @@ class Logger:
         file_handler.setFormatter(file_format)
 
         console_handler = logging.StreamHandler(sys.stdout)
-        console_handler.setLevel(logging.DEBUG if settings.DEBUG else logging.INFO)
+        console_handler.setLevel(logging.DEBUG if Settings.get("debug") else logging.INFO)
         console_format = logging.Formatter("%(levelname)s: %(message)s")
         console_handler.setFormatter(console_format)
 

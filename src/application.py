@@ -1,7 +1,7 @@
-from flask import Flask, render_template, request # type: ignore
+from flask import Flask, render_template, request  # type: ignore
 from flask_socketio import SocketIO
 
-from . import settings
+from .settings import Settings
 from .ai_chat_generator import AiChatGenerator
 from .message import Message
 from .slm_chat_logger import Logger
@@ -18,6 +18,7 @@ if TYPE_CHECKING:
         remote_addr: str
 
     request: Request
+
 
 class Application:
     def __init__(self):
@@ -45,16 +46,16 @@ class Application:
             self.ai_enabled = True
 
             self.make_routes()
-            Logger.info(f"Application initialized with model: {settings.MODEL}")
+            Logger.info(f"Application initialized with model: {Settings.get('model')} on port {Settings.get('port')}")
 
     def reset_messages(self) -> None:
         """
         Reset the messages list and initialize the system prompt message.
         """
-        self.messages = [Message("system", settings.SYSTEM_PROMPT, 0, None, settings.HIDE_SYSTEM_PROMPT)]
+        self.messages = [Message("system", Settings.get("system_prompt"), 0, None, Settings.get("hide_system_prompt"))]
         self.messageId = 1
-        if settings.GREETING and settings.GREETING != "":
-            self.add_message("assistant", settings.GREETING)
+        if Settings.get("greeting") and Settings.get("greeting") != "":
+            self.add_message("assistant", Settings.get("greeting"))
 
     def slm_token_callback(self, new_content: str, full_response: str) -> None:
         """
@@ -116,7 +117,7 @@ class Application:
         clientIds : list of int, optional
             List of client IDs to send the messages to. If None, all clients are updated.
         """
-        data = [self.messages[messageId].to_dict(settings.SHOW_USER_NAME)]
+        data = [self.messages[messageId].to_dict(Settings.get("show_user_name"))]
         data[0]["content"] = content_to_append
         data[0]["append"] = True
         clientIds = clientIds or self.clients.keys()
@@ -156,7 +157,7 @@ class Application:
                 updated_messages = []
                 for message in self.messages:
                     if message.id in messageIds and not message.hidden:
-                        updated_messages.append(message.to_dict(settings.SHOW_USER_NAME))
+                        updated_messages.append(message.to_dict(Settings.get("show_user_name")))
 
                 if updated_messages:
                     self.socketio.emit("update_messages", {"messages": updated_messages}, to=clientId)
@@ -224,7 +225,7 @@ class Application:
             hidden = False
             if content == "":
                 Logger.info(f"Received empty message from {request.sid}. Assuming forced response.")
-                content = settings.FORCE_PROMPT
+                content = Settings.get("force_prompt")
                 hidden = True
 
             self.add_message("user", content, request.sid, hidden)
@@ -266,9 +267,9 @@ class Application:
         """
         Run the Flask application with SocketIO.
         """
-        if settings.DEBUG:
-            Logger.info(f"Starting server in DEBUG mode on port {settings.PORT}")
-            self.socketio.run(self.app, host="127.0.0.1", port=settings.PORT, debug=True)
+        if Settings.get("debug"):
+            Logger.info(f"Starting server in DEBUG mode on port {Settings.get('port')}")
+            self.socketio.run(self.app, host="127.0.0.1", port=Settings.get("port"), debug=True)
         else:
-            Logger.info(f"Starting server in PRODUCTION mode on port {settings.PORT}")
-            self.socketio.run(self.app, host="0.0.0.0", port=settings.PORT, debug=False)
+            Logger.info(f"Starting server in PRODUCTION mode on port {Settings.get('port')}")
+            self.socketio.run(self.app, host="0.0.0.0", port=Settings.get("port"), debug=False)
