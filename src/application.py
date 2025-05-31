@@ -266,11 +266,11 @@ class Application:
             else:
                 self.update_clients(messageIds=[id], clientIds=[request.sid])
 
-        @self.socketio.on("reset_context")
-        def handle_reset_context():
+        @self.socketio.on("provide_context")
+        def handle_provide_context():
             """Handles resetting AI context request from the client."""
             Logger.info(f"Reset context request from {request.sid}")
-            self.add_message("assistant", "Let me take a moment to read the context that will be sent. I'll tell you what I understood from it.", "assistant")
+            self.add_message("assistant", Settings.get("context_pretext"), "assistant")
             self.add_message("user", ContextManager.get_context(), "context", True)
             self.update_clients(messageIds=[self.messageId - 2, self.messageId - 1])
             self.request_slm_background_response()
