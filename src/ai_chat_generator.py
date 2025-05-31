@@ -6,8 +6,13 @@ from .settings import Settings
 from .message import Message
 from .slm_chat_logger import Logger
 
+
 class AiChatGenerator:
-    def __init__(self, token_callback: Callable[[str, str], None] | None = None, finish_callback: Callable[[str], None] | None = None):
+    def __init__(
+        self,
+        token_callback: Callable[[str, str], None] | None = None,
+        finish_callback: Callable[[str], None] | None = None,
+    ):
         """
         Initialize the AiChatGenerator with a token callback function.
 
@@ -32,6 +37,8 @@ class AiChatGenerator:
         new_message = ""
         if message.user_id == "system":
             new_message = "System: " + message.content
+        elif message.user_id == "context":
+            new_message = "Context: " + message.content
         elif message.user_id == "assistant":
             new_message = message.content
         else:

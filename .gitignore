@@ -1,4 +1,8 @@
 .vscode/
+mock_dbs/
+src/context/modules/*
+!src/context/modules/__init__.py
+!src/context/modules/base_context_module.py
 config.json
 
 # Byte-compiled / optimized / DLL files

@@ -2,6 +2,7 @@ from flask import Flask, render_template, request  # type: ignore
 from flask_socketio import SocketIO
 
 from .settings import Settings
+from .context.contextManager import ContextManager
 from .ai_chat_generator import AiChatGenerator
 from .message import Message
 from .slm_chat_logger import Logger
@@ -44,6 +45,9 @@ class Application:
             self.ai_busy = False
             self.user_count = 0
             self.ai_enabled = True
+
+            if Settings.get("context_modules"):
+                ContextManager.register_context_modules(Settings.get("context_modules"))
 
             self.make_routes()
             Logger.info(f"Application initialized with model: {Settings.get('model')} on port {Settings.get('port')}")
@@ -92,7 +96,9 @@ class Application:
         Request a background response for the current messages from the AI model.
         """
         Logger.info("Requesting AI response")
-        if self.ai_chat_generator.request_background_chat(self.messages):
+        if not self.ai_enabled:
+            Logger.warning("AI responses are disabled, not requesting response")
+        elif self.ai_chat_generator.request_background_chat(self.messages):
             self.add_message("assistant", "...")
             self.ai_chat_target_index = len(self.messages) - 1
             self.set_ai_busy(True)
@@ -230,10 +236,7 @@ class Application:
 
             self.add_message("user", content, request.sid, hidden)
             self.update_clients([self.messageId - 1])
-            if self.ai_enabled:
-                self.request_slm_background_response()
-            else:
-                Logger.debug("AI response not requested (AI disabled)")
+            self.request_slm_background_response()
 
         @self.socketio.on("toggle_ai")
         def handle_toggle_ai(data):
@@ -262,6 +265,14 @@ class Application:
                 self.update_clients(clientIds=[request.sid])
             else:
                 self.update_clients(messageIds=[id], clientIds=[request.sid])
+
+        @self.socketio.on("reset_context")
+        def handle_reset_context():
+            """Handles resetting AI context request from the client."""
+            Logger.info(f"Reset context request from {request.sid}")
+            self.add_message("assistant", ContextManager.get_context(), "context", True)
+            self.update_clients(clientIds=[request.sid])
+            self.request_slm_background_response()
 
     def run(self):
         """

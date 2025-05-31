@@ -38,6 +38,7 @@
                     <button type="button" class="options-button button">⋮</button>
                     <div class="dropdown-content">
                         <a class="dropdown-element" onclick="socket.emit('reset'); return false;">Reset Chat</a>
+                        <a class="dropdown-element" onclick="socket.emit('reset_context'); return false">Reset Context</a>
                         <a class="dropdown-element" id="ai-toggle" onclick="toggleAI(); return false;">
                             Disable Responses
                         </a>

@@ -26,6 +26,7 @@ class Settings:
         "greeting": "Hello.",
         "hide_system_prompt": True,
         "show_user_name": True,
+        "context_modules": []
     }
     _config = {}
     _root: str | None = None
