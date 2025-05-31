@@ -107,8 +107,8 @@ class Application:
 
     def add_message(self, role, content, user_id=None, hidden=False):
         self.messages.append(Message(role, content, self.messageId, user_id, hidden))
+        Logger.debug(f"Added {role} message: {content}, ID: {self.messageId}, User ID: {user_id}, Hidden: {hidden}")
         self.messageId += 1
-        Logger.debug(f"Added {role} message: {content}, ID: {self.messageId - 1}, User ID: {user_id}, Hidden: {hidden}")
 
     def update_clients_append(self, messageId, content_to_append, clientIds=None):
         """
@@ -270,8 +270,9 @@ class Application:
         def handle_reset_context():
             """Handles resetting AI context request from the client."""
             Logger.info(f"Reset context request from {request.sid}")
-            self.add_message("assistant", ContextManager.get_context(), "context", True)
-            self.update_clients(clientIds=[request.sid])
+            self.add_message("assistant", "Let me take a moment to read the context that will be sent. I'll tell you what I understood from it.", "assistant")
+            self.add_message("user", ContextManager.get_context(), "context", True)
+            self.update_clients(messageIds=[self.messageId - 2, self.messageId - 1])
             self.request_slm_background_response()
 
     def run(self):

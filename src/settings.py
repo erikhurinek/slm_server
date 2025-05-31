@@ -26,6 +26,7 @@ class Settings:
         "greeting": "Hello.",
         "hide_system_prompt": True,
         "show_user_name": True,
+        "context_pretext": "Let me take a moment to read the context that will be sent. I'll tell you when I'm ready to continue.",
         "context_modules": []
     }
     _config = {}

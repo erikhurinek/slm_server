@@ -83,6 +83,6 @@ class ContextManager:
             contexts.append(module.get_context(*args, **kwargs))
 
         if len(contexts) == 0:
-            return "Please tell the users that there is no context available to see."
-
-        return "Here is some context to be analysed. Please use this in your responses. \n" + "\n".join(contexts)
+            return "Please repeat and tell the users that there was an issue getting the context, and you cannot provide anything useful."
+        else:
+            return "Here is some context to be analysed. Please use this in your responses. \n" + "\n".join(contexts)
