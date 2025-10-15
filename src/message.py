@@ -38,7 +38,8 @@ class Message:
             The ID of the user who sent the message.
             Set automatically to "system" or "assistant" for those roles.
         hidden : bool, optional
-            Whether the message should be hidden from clients. Default is False.
+            Whether the message should be hidden from clients. Default is
+            False.
         """
         self.role = role
         self.content = content
@@ -54,12 +55,14 @@ class Message:
 
     def to_dict(self, include_user_name=False) -> dict:
         """
-        Convert the Message object to a dictionary representation, for use in transmission to clients.
+        Convert the Message object to a dictionary representation, for use in
+        transmission to clients.
 
         Parameter
         ----------
         include_user_name : bool
-            Whether to include the user_name in the dictionary representation. Default is False.
+            Whether to include the user_name in the dictionary representation.
+            Default is False.
 
         Returns
         -------
@@ -78,4 +81,7 @@ class Message:
         return data
 
     def __repr__(self):
-        return f"Message(role={self.role}, content={self.content}, id={self.id}, hidden={self.hidden}"
+        return (
+            f"Message(role={self.role}, content={self.content},"
+            f"id = {self.id}, hidden = {self.hidden}"
+        )

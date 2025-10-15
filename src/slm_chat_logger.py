@@ -28,15 +28,18 @@ class Logger:
         log_file = os.path.join(log_dir, f"slm_server_{timestamp}.log")
 
         self.logger = logging.getLogger()
-        self.logger.setLevel(logging.DEBUG if Settings.get("debug") else logging.INFO)
+        self.logger.setLevel(
+            logging.DEBUG if Settings.get("debug") else logging.INFO)
 
         file_handler = logging.FileHandler(log_file)
         file_handler.setLevel(logging.INFO)
-        file_format = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+        file_format = logging.Formatter(
+            "%(asctime)s - %(name)s - %(levelname)s - %(message)s")
         file_handler.setFormatter(file_format)
 
         console_handler = logging.StreamHandler(sys.stdout)
-        console_handler.setLevel(logging.DEBUG if Settings.get("debug") else logging.INFO)
+        console_handler.setLevel(
+            logging.DEBUG if Settings.get("debug") else logging.INFO)
         console_format = logging.Formatter("%(levelname)s: %(message)s")
         console_handler.setFormatter(console_format)
 
@@ -45,35 +48,25 @@ class Logger:
 
     @classmethod
     def info(cls, msg: object, *args: object) -> None:
-        """
-        Log an info message.
-        """
+        """Log an info message."""
         cls().logger.info(msg, *args)
 
     @classmethod
     def debug(cls, msg: object, *args: object) -> None:
-        """
-        Log a debug message.
-        """
+        """Log a debug message."""
         cls().logger.debug(msg, *args)
 
     @classmethod
     def warning(cls, msg: object, *args: object) -> None:
-        """
-        Log a warning message.
-        """
+        """Log a warning message."""
         cls().logger.warning(msg, *args)
 
     @classmethod
     def error(cls, msg: object, *args: object) -> None:
-        """
-        Log an error message.
-        """
+        """Log an error message."""
         cls().logger.error(msg, *args)
 
     @classmethod
     def exception(cls, msg: object, *args: object) -> None:
-        """
-        Log an exception message.
-        """
+        """Log an exception message."""
         cls().logger.exception(msg, *args)

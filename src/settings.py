@@ -18,15 +18,15 @@ class Settings:
         "port": 8080,
         "force_prompt": "<FORCE_CONTINUE>",
         "system_prompt": (
-            "You are a witty AI. Sometimes, you may respond with sarcasm. Be as human as possible. "
-            + "Each user prompt starts with their name, followed by a colon and their prompt. Your responses must not start with a name followed by a colon. You are responding to all users. Occasionally, users may respond with "
+            "You are a witty AI. Sometimes, you may respond with sarcasm. Be as human as possible. "  # noqa: E262
+            + "Each user prompt starts with their name, followed by a colon and their prompt. Your responses must not start with a name followed by a colon. You are responding to all users. Occasionally, users may respond with "  # noqa: E262
             + "<FORCE_CONTINUE>"
-            + " which is an automatically generated message, indicating that you should continue where you left off. Do not use emojis or narration in your responses."
+            + " which is an automatically generated message, indicating that you should continue where you left off. Do not use emojis or narration in your responses."  # noqa: E262
         ),
         "greeting": "Hello.",
         "hide_system_prompt": True,
         "show_user_name": True,
-        "context_pretext": "Let me take a moment to read the context that will be sent. I'll tell you when I'm ready to continue.",
+        "context_pretext": "Let me take a moment to read the context that will be sent. I'll tell you when I'm ready to continue.",  # noqa: E501
         "context_modules": []
     }
     _config = {}
@@ -54,16 +54,20 @@ class Settings:
         Raises
         ------
         ValueError
-            If the root directory is not set. You must set it using `Settings.set_root()`, ideally at the start of the application.
+            If the root directory is not set. You must set it using
+            `Settings.set_root()`, ideally at the start of the application.
         """
         if cls._root is None:
-            raise ValueError("Root directory is not set. Please set it using Settings.set_root()")
+            raise ValueError(
+                "Root directory is not set. Please set it using" +
+                "Settings.set_root()")
         return cls._root
 
     @classmethod
     def set_root(cls, root: str) -> None:
         """
-        Set the root directory for the settings, which is used to determine where the config file is saved and loaded from.
+        Set the root directory for the settings, which is used to determine
+        where the config file is saved and loaded from.
 
         Parameters
         ----------
@@ -80,16 +84,21 @@ class Settings:
         Parameters
         ----------
         key : str
-            The key of the setting to retrieve. This is case-sensitive and usually lowercase. If the key is not found, it will try to search for a default value, or raise a KeyError if the key is unrecognized.
+            The key of the setting to retrieve. This is case-sensitive and
+            usually lowercase. If the key is not found, it will try to search
+            for a default value, or raise a KeyError if the key is
+            unrecognized.
 
         Raises
         ------
         KeyError
-            If the key is unrecognized and does not exist in the default settings.
+            If the key is unrecognized and does not exist in the default
+            settings.
 
         Returns
         -------
-        The value of the setting, or the default value if the key does not exist.
+        The value of the setting, or the default value if the key does not
+        exist.
         """
         if key in cls()._config:
             return cls()._config[key]
@@ -109,7 +118,8 @@ class Settings:
     def _load_config(self):
         """
         Load the configuration from the config file.
-        If the file does not exist, it will create a new one with default settings.
+        If the file does not exist, it will create a new one with default
+        settings.
         """
         config_path = os.path.join(self.get_root(), CONFIG_FILE_NAME)
         if not os.path.exists(config_path):

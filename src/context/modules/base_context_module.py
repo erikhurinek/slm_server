@@ -10,6 +10,7 @@ class BaseContextModule(ABC):
         Returns
         -------
         str
-            The context as a string, to be interpreted by the application's language model.
+            The context as a string, to be interpreted by the application's
+            language model.
         """
         pass

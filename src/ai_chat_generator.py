@@ -54,18 +54,23 @@ class AiChatGenerator:
 
         full_response = ""
         try:
-            for chunk in ollama.chat(self.MODEL, messages=self.messages, stream=True):
-                if chunk and "message" in chunk and "content" in chunk["message"]:
+            for chunk in ollama.chat(
+                    self.MODEL,
+                    messages=self.messages,
+                    stream=True
+            ):
+                if (chunk and "message" in chunk
+                        and "content" in chunk["message"]):
                     content = chunk["message"]["content"]
                     full_response += content
                     if self.token_callback:
                         self.token_callback(content, full_response)
         except Exception as e:
+            content = " Error generating response."
+            full_response += content
             if self.token_callback:
-                self.token_callback(f" Error generating response.", f" Error generating response.")
-                Logger.error(f"Error generating response: {str(e)}")
-                if Settings.get("debug"):
-                    raise e
+                self.token_callback(content, full_response)
+            Logger.error(f"Error generating response: {str(e)}")
         finally:
             with self.lock:
                 self.is_generating = False
@@ -86,8 +91,10 @@ class AiChatGenerator:
             if self.is_generating:
                 return False
 
-            self.messages = [self._convert_message_to_ollama(msg) for msg in messages]
-            self.generation_thread = threading.Thread(target=self._generate_response)
+            self.messages = [self._convert_message_to_ollama(
+                msg) for msg in messages]
+            self.generation_thread = threading.Thread(
+                target=self._generate_response)
             self.generation_thread.daemon = True
             self.generation_thread.start()
             return True

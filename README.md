@@ -1,7 +1,7 @@
 # SLM Server
 
 A Small Language Model (SLM) implemented in Python.
-Model: [Gemma 3 1B](https://ai.google.dev/gemma/docs/core) from [Ollama](https://ollama.com/).
+Model: [Gemma 3 1B](https://ai.google.dev/gemma/docs/core) with [Ollama](https://ollama.com/).
 Backend: [Flask](https://flask.palletsprojects.com/en/stable/).
 
 ## Requirements
