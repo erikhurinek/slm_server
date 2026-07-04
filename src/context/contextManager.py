@@ -64,8 +64,8 @@ class ContextManager:
                 raise FileNotFoundError(
                     f"Context module {module_name} not found at {module_path}")
 
-            module = __import__(f"src.context.modules.{
-                                module_name}", fromlist=[module_name])
+            module = __import__(f"src.context.modules. "
+                                f"{module_name}", fromlist=[module_name])
             class_name = cls._snake_to_pascal_case(module_name)
             context_class = getattr(module, class_name, None)
             if context_class is None:

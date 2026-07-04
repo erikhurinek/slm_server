@@ -54,8 +54,8 @@ class Application:
                     Settings.get("context_modules"))
 
             self.make_routes()
-            Logger.info(f"Application initialized with model: {
-                        Settings.get('model')} on port {Settings.get('port')}")
+            Logger.info(f"Application initialized with model: "
+                        f"{Settings.get('model')} on port {Settings.get('port')}")
 
     def reset_messages(self) -> None:
         """
@@ -120,8 +120,8 @@ class Application:
     def add_message(self, role, content, user_id=None, hidden=False):
         self.messages.append(
             Message(role, content, self.messageId, user_id, hidden))
-        Logger.debug(f"Added {role} message: {content}, ID: {
-                     self.messageId}, User ID: {user_id}, Hidden: {hidden}")
+        Logger.debug(f"Added {role} message: {content}, ID: "
+                     f"{self.messageId}, User ID: {user_id}, Hidden: {hidden}")
         self.messageId += 1
 
     def update_clients_append(self,
@@ -163,8 +163,7 @@ class Application:
                 Logger.warning(
                     f"Client ID {clientId} not found in clients list")
 
-        Logger.debug(f'Appended data "{
-                     content_to_append}" to clients {clientIds}')
+        Logger.debug(f"Appended data \"{content_to_append}\" to clients {clientIds}")
 
     def update_clients(self, messageIds=None, clientIds=None):
         """
@@ -233,8 +232,8 @@ class Application:
         @self.socketio.on("connect")
         def handle_connect(auth=None):
             """Client connection"""
-            Logger.info(f"Client connected: {request.sid} {
-                        request.remote_addr}")
+            Logger.info(f"Client connected: {request.sid} from IP: " 
+                        f"{request.remote_addr}")
             self.clients[request.sid] = request.namespace
             self.user_count += 1
             self.broadcast_user_count()
@@ -261,8 +260,8 @@ class Application:
 
             hidden = False
             if content == "":
-                Logger.info(f"Received empty message from {
-                            request.sid}. Assuming forced response.")
+                Logger.info(f"Received empty message from "
+                            f"{request.sid}. Assuming forced response.")
                 content = Settings.get("force_prompt")
                 hidden = True
 
@@ -315,12 +314,12 @@ class Application:
         Run the Flask application with SocketIO.
         """
         if Settings.get("debug"):
-            Logger.info(f"Starting server in DEBUG mode on port {
-                        Settings.get('port')}")
+            Logger.info(f"Starting server in DEBUG mode on port "
+                        f"{Settings.get('port')}")
             self.socketio.run(self.app, host="127.0.0.1",
                               port=Settings.get("port"), debug=True)
         else:
-            Logger.info(f"Starting server in PRODUCTION mode on port {
-                        Settings.get('port')}")
+            Logger.info(f"Starting server in PRODUCTION mode on port "
+                        f"{Settings.get('port')}")
             self.socketio.run(self.app, host="0.0.0.0",
                               port=Settings.get("port"), debug=False)
