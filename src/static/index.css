@@ -140,7 +140,7 @@ body {
 }
 
 .user-message {
-    background: #4f8ef7;
+    background: #3670d3;
     color: #fff;
     align-self: flex-end;
 }
@@ -191,7 +191,7 @@ textarea:focus {
 }
 
 .button {
-    background: #4f8ef7;
+    background: #3670d3;
     border: none;
     color: white;
     padding: 14px 20px;
