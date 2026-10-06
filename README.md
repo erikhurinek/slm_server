@@ -6,7 +6,8 @@ Backend: [Flask](https://flask.palletsprojects.com/en/stable/).
 WordLists: [top-english-wordlists](https://github.com/david47k/top-english-wordlists/tree/master) by david47k.  
 
 ## Requirements
- - Python 3.8 or higher
+ - uv
+ - Python 3.12
    - Flask
    - Ollama
    - Requests
@@ -22,13 +23,13 @@ WordLists: [top-english-wordlists](https://github.com/david47k/top-english-wordl
     ```
  3. Install required Python packages in an virtual environment, using the commands:
     ```bash
-    python -m venv venv
-    source venv/bin/activate
-    pip install -r requirements.txt
+    uv venv
+    source .venv/bin/activate
+    uv sync
     ```
  4. Start the server using the command:
     ```bash
-    python main.py
+    uv run main.py
     ```
  5. Open your web browser and navigate to `http://localhost:8080/slm-chat` to access the chatbot.
 
